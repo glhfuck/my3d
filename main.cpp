@@ -1,10 +1,10 @@
 #include <iostream>
 #include "Shape.h"
+#include "Camera.h"
 
 int main() {
-  Shape shape1;
-  shape1.printModelMatrix();
-  Shape shape2(ublas::scalar_vector<double>(3, 1));
-  shape2.printModelMatrix();
+  Camera cam;
+
+
   return 0;
 }
