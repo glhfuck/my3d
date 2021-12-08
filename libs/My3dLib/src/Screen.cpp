@@ -19,5 +19,5 @@ Screen::Screen(double fov,
       w, 0, 0, 0,
       0, a, 0, b,
       0, 0, h, 0,
-      0, 0, 1, 0;
+      0, 1, 0, 0;
 }
