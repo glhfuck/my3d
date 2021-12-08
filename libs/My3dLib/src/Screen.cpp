@@ -1,4 +1,4 @@
-#include "Screen.h"
+#include "../include/Screen.h"
 #include <cmath>
 
 Screen::Screen(double fov,
@@ -17,7 +17,7 @@ Screen::Screen(double fov,
 
   P <<=
       w, 0, 0, 0,
-      0, h, 0, 0,
-      0, 0, a, b,
+      0, a, 0, b,
+      0, 0, h, 0,
       0, 0, 1, 0;
 }
