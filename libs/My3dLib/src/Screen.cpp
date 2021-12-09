@@ -6,18 +6,19 @@ Screen::Screen(double fov,
                double near,
                double far): P(4,4) {
   double rad_fov = fov * M_PI / 180;
+  rad_fov /= 2;
   double tan_fov = std::tan(rad_fov);
 
-  double w = 1 / tan_fov;
+  double w = tan_fov;
   double h = w / ratio;
 
-  // z_res = (a*z + b)/z
+  // y_res = (a*y + b)/y
   double a = far / (far - near);
   double b = - far * near / (far - near);
 
   P <<=
-      w, 0, 0, 0,
+      1/w, 0, 0, 0,
       0, a, 0, b,
-      0, 0, h, 0,
+      0, 0, 1/h, 0,
       0, 1, 0, 0;
 }

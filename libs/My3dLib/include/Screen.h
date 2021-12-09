@@ -14,7 +14,7 @@ class Screen {
                   double ratio = 1,
                   double near = 1,
                   double far = 100);
- private:
+ public:
   ublas::matrix<double> P;
 };
 

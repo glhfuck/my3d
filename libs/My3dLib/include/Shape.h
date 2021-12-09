@@ -11,14 +11,13 @@ using namespace boost::numeric;
 class Shape {
  public:
   explicit Shape(const ublas::vector<double>& pos = ublas::zero_vector<double>(3));
+  void setModelMatrix(const ublas::vector<double>& pos);
 
-  void printModelMatrix() {
-    std::cout << M << std::endl;
-  }
-
- private:
+ protected:
   ublas::matrix<double> M;
-  ublas::vector<ublas::vector<double>> vertices_;
+  std::vector<ublas::vector<double>> vertices_;
+
+  // TODO rotate matrices
 };
 
 #endif //MY3D_SRC_SHAPE_H_

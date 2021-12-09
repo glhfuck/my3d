@@ -1,5 +1,5 @@
-#include "Camera.h"
-#include "invert.h"
+#include "../include/Camera.h"
+#include "../include/invert.h"
 
 Camera::Camera(const ublas::vector<double>& pos,
                const ublas::vector<double>& look_at,

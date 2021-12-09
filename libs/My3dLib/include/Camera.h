@@ -14,7 +14,7 @@ class Camera {
                   const ublas::vector<double>& look_at = ublas::zero_vector(3),
                   const ublas::vector<double>& up = ublas::unit_vector(3, 2));
 
- private:
+ public:
   ublas::matrix<double> V;
 };
 
