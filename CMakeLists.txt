@@ -11,15 +11,23 @@ if (NOT Boost_FOUND)
 endif ()
 #-----------------------------------------
 
+find_package(SFML 2.5 COMPONENTS graphics audio REQUIRED)
+
 include_directories(
         ${Boost_INCLUDE_DIR}
+        ${SFML_INCLUDE_DIR}
         include
 )
 
-add_subdirectory(src) # My3dLib
-add_executable(${PROJECT_NAME} main.cpp)
+add_subdirectory(libs/My3dLib)
+#add_subdirectory(libs/MyRaster)
+add_executable(${PROJECT_NAME} src/main.cpp)
 
-target_link_libraries(${PROJECT_NAME} My3dLib)
+target_link_libraries(${PROJECT_NAME}
+        My3dLib
+        sfml-graphics
+        sfml-audio
+        )
 
 
 
