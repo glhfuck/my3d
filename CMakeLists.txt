@@ -12,7 +12,7 @@ endif ()
 #-----------------------------------------
 
 #------------------SFML-------------------
-find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
+find_package(SFML 2.5 COMPONENTS graphics window REQUIRED)
 if (NOT SFML_FOUND)
     message(FATAL_ERROR "Could not find SFML!")
 endif ()
@@ -26,11 +26,12 @@ include_directories(
 
 add_subdirectory(libs/My3dLib)
 #add_subdirectory(libs/MyRaster)
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} src/test.cpp)
 
 target_link_libraries(${PROJECT_NAME}
         My3dLib
         sfml-graphics
+        sfml-window
         )
 
 
