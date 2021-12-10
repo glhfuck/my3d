@@ -8,6 +8,10 @@
 
 using namespace boost::numeric;
 
+using matrix = ublas::matrix<double>;
+using vector = ublas::vector<double>;
+using zero_vector = ublas::zero_vector<double>;
+
 class Screen {
  public:
   explicit Screen(double fov = 75,
@@ -15,7 +19,7 @@ class Screen {
                   double near = 1,
                   double far = 100);
  public:
-  ublas::matrix<double> P;
+  matrix P;
 };
 
 #endif //MY3D_SRC_SCREEN_H_

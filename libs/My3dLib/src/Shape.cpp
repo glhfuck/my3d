@@ -1,19 +1,27 @@
-#include "../include/Shape.h"
+#include "Shape.h"
 
-Shape::Shape(const ublas::vector<double>& pos) : M(4, 4) {
-  setModelMatrix(pos);
+Shape::Shape(const vector& pos) : M(4, 4) {
+  M <<=
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1;
+
+  setPosition(pos);
 }
 
-void Shape::setModelMatrix(const ublas::vector<double>& pos) {
+void Shape::setPosition(const vector& pos) {
   if (pos.size() < 3) {
     throw std::invalid_argument("invalid size vector");
   }
 
-  M <<=
-      1, 0, 0, pos[0],
-      0, 1, 0, pos[1],
-      0, 0, 1, pos[2],
-      0, 0, 0, 1;
+  for (int i = 0; i < 3; ++i) {
+    M(i, 3) = pos[i];
+  }
+}
+
+void Shape::translate(const vector& pos) {
+  M = ublas::prod(M, getTranslationMatrix(pos));
 }
 
 void Shape::localOxRotate(double angle) {
@@ -40,8 +48,8 @@ void Shape::globalOzRotate(double angle) {
   M = ublas::prod(getOzRotateMatrix(angle), M);
 }
 
-ublas::matrix<double> Shape::getOxRotateMatrix(double angle) {
-  ublas::matrix<double> R(4, 4);
+matrix Shape::getOxRotateMatrix(double angle) {
+  matrix R(4, 4);
 
   double rad_angle = angle * M_PI / 180;
   double c = std::cos(rad_angle);
@@ -56,8 +64,8 @@ ublas::matrix<double> Shape::getOxRotateMatrix(double angle) {
   return R;
 }
 
-ublas::matrix<double> Shape::getOyRotateMatrix(double angle) {
-  ublas::matrix<double> R(4, 4);
+matrix Shape::getOyRotateMatrix(double angle) {
+  matrix R(4, 4);
 
   double rad_angle = angle * M_PI / 180;
   double c = std::cos(rad_angle);
@@ -72,8 +80,8 @@ ublas::matrix<double> Shape::getOyRotateMatrix(double angle) {
   return R;
 }
 
-ublas::matrix<double> Shape::getOzRotateMatrix(double angle) {
-  ublas::matrix<double> R(4, 4);
+matrix Shape::getOzRotateMatrix(double angle) {
+  matrix R(4, 4);
 
   double rad_angle = angle * M_PI / 180;
   double c = std::cos(rad_angle);
@@ -87,3 +95,21 @@ ublas::matrix<double> Shape::getOzRotateMatrix(double angle) {
 
   return R;
 }
+matrix Shape::getTranslationMatrix(const vector& pos) {
+  matrix T(4, 4);
+
+  if (pos.size() < 3) {
+    throw std::invalid_argument("invalid size vector");
+  }
+
+  T <<=
+      1, 0, 0, pos[0],
+      0, 1, 0, pos[1],
+      0, 0, 1, pos[2],
+      0, 0, 0, 1;
+
+  return T;
+}
+
+
+

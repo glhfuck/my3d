@@ -1,20 +1,21 @@
-#include "../include/Camera.h"
-#include "../include/invert.h"
+#include "invert.h"
+#include "Camera.h"
 
-Camera::Camera(const ublas::vector<double>& pos,
-               const ublas::vector<double>& look_at,
-               const ublas::vector<double>& up) : V(4, 4) {
-  ublas::vector<double> y = look_at - pos;
+
+Camera::Camera(const vector& pos,
+               const vector& look_at,
+               const vector& up) : V(4, 4) {
+  vector y = look_at - pos;
   y /= ublas::norm_2(y);
 
-  ublas::vector<double> x(3);
+  vector x(3);
   x <<=
       y[2] * up[1] - y[1] * up[2],
       y[0] * up[2] - y[2] * up[0],
       y[1] * up[0] - y[0] * up[1];
   x /= ublas::norm_2(x);
 
-  ublas::vector<double> z(3);
+  vector z(3);
   z <<=
       x[2] * y[1] - x[1] * y[2],
       x[0] * y[2] - x[2] * y[0],

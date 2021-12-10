@@ -8,10 +8,16 @@
 
 using namespace boost::numeric;
 
+using matrix = ublas::matrix<double>;
+using vector = ublas::vector<double>;
+using zero_vector = ublas::zero_vector<double>;
+
 class Shape {
  public:
-  explicit Shape(const ublas::vector<double>& pos = ublas::zero_vector<double>(3));
-  void setModelMatrix(const ublas::vector<double>& pos);
+  explicit Shape(const vector& pos = zero_vector(3));
+
+  void setPosition(const vector& pos);
+  void translate(const vector& pos);
 
   void localOxRotate(double angle);
   void localOyRotate(double angle);
@@ -22,12 +28,14 @@ class Shape {
   void globalOzRotate(double angle);
 
  protected:
-  ublas::matrix<double> M;
-  std::vector<ublas::vector<double>> vertices_;
+  matrix M;
+  size_t vertices_count_ = 0;
+  std::vector<vector> vertices_;
 
-  static ublas::matrix<double> getOxRotateMatrix(double angle);
-  static ublas::matrix<double> getOyRotateMatrix(double angle);
-  static ublas::matrix<double> getOzRotateMatrix(double angle);
+  static matrix getOxRotateMatrix(double angle);
+  static matrix getOyRotateMatrix(double angle);
+  static matrix getOzRotateMatrix(double angle);
+  static matrix getTranslationMatrix(const vector& pos);
 };
 
 #endif //MY3D_SRC_SHAPE_H_
