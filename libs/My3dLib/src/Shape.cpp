@@ -21,7 +21,7 @@ void Shape::setPosition(const vector& pos) {
 }
 
 void Shape::translate(const vector& pos) {
-  M = ublas::prod(M, getTranslationMatrix(pos));
+  M = ublas::prod(getTranslationMatrix(pos), M);
 }
 
 void Shape::localOxRotate(double angle) {
