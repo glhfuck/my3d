@@ -31,6 +31,8 @@ void Shape::rotate(double angle, Axes axis, Coords coord) {
     globalRotate(angle, axis);
   } else if (coord == Coords::Local) {
     localRotate(angle, axis);
+  } else {
+    throw std::invalid_argument("Invalid coordinate system.");
   }
 }
 void Shape::scale(double x, double y, double z) {
@@ -41,27 +43,31 @@ void Shape::localRotate(double angle, Axes axis) {
   switch (axis) {
     case Axes::Ox :
       localOxRotate(angle);
-      break;
+      return;
     case Axes::Oy :
       localOyRotate(angle);
-      break;
+      return;
     case Axes::Oz :
       localOzRotate(angle);
-      break;
+      return;
   }
+
+  throw std::invalid_argument("Invalid axis.");
 }
 void Shape::globalRotate(double angle, Axes axis) {
   switch (axis) {
     case Axes::Ox :
       globalOxRotate(angle);
-      break;
+      return;
     case Axes::Oy :
       globalOyRotate(angle);
-      break;
+      return;
     case Axes::Oz :
       globalOzRotate(angle);
-      break;
+      return;
   }
+
+  throw std::invalid_argument("Invalid axis.");
 }
 
 void Shape::localOxRotate(double angle) {
@@ -73,7 +79,6 @@ void Shape::localOyRotate(double angle) {
 void Shape::localOzRotate(double angle) {
   M = ublas::prod(M, getOzRotateMatrix(angle));
 }
-
 void Shape::globalOxRotate(double angle) {
   M = ublas::prod(getOxRotateMatrix(angle), M);
 }
@@ -95,7 +100,6 @@ matrix Shape::getTranslationMatrix(const vector& vec) {
 
   return T;
 }
-
 matrix Shape::getScaleMatrix(double x, double y, double z) {
   matrix S(4, 4);
 
@@ -107,7 +111,6 @@ matrix Shape::getScaleMatrix(double x, double y, double z) {
 
   return S;
 }
-
 matrix Shape::getOxRotateMatrix(double angle) {
   matrix R(4, 4);
 
