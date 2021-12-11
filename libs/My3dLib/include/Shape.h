@@ -24,16 +24,24 @@ class Shape {
     Global,
     Local
   };
+  Shape();
+  explicit Shape(const vector& pos);
 
-  explicit Shape(const vector& pos = zero_vector(3));
-
-  void setPosition(const vector& pos);
-  void translate(const vector& vec);
+  void setPosition(const vector& pos, Coords coord = Coords::Global);
+  void translate(const vector& vec, Coords coord = Coords::Global);
   void rotate(double angle, Axes axis, Coords coord);
-  void scale(double x, double y, double z);
-
+  void scale(double x, double y, double z, Coords coord = Coords::Local);
  protected:
-  matrix M;
+  // TODO Maybe add pos?
+  matrix M();
+
+  matrix localScale_;
+  matrix localRotate_;
+  matrix localTranslate_;
+  matrix globalScale_;
+  matrix globalRotate_;
+  matrix globalTranslate_;
+
   size_t vertices_count_ = 0;
   std::vector<vector> vertices_;
 
@@ -43,15 +51,12 @@ class Shape {
   void localOxRotate(double angle);
   void localOyRotate(double angle);
   void localOzRotate(double angle);
-
   void globalOxRotate(double angle);
   void globalOyRotate(double angle);
   void globalOzRotate(double angle);
 
   static matrix getTranslationMatrix(const vector& vec);
-
   static matrix getScaleMatrix(double x, double y, double z);
-
   static matrix getOxRotateMatrix(double angle);
   static matrix getOyRotateMatrix(double angle);
   static matrix getOzRotateMatrix(double angle);

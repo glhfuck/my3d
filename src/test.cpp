@@ -21,43 +21,6 @@ class Point {
   double z;
 };
 
-class Cube: public Shape {
- public:
-
-  explicit Cube(const ublas::vector<double>& pos = ublas::zero_vector<double>(3),
-                double l = 1): Shape(pos) {
-    vertices_count_ = 8;
-
-    vertices_ = {
-        Point(0, 0, 0),
-        Point(0, 0, l),
-        Point(0, l, 0),
-        Point(0, l, l),
-        Point(l, 0, 0),
-        Point(l, 0, l),
-        Point(l, l, 0),
-        Point(l, l, l)
-    };
-  }
-
-  void draw(sf::RenderWindow& window, ublas::matrix<double>& VP) {
-    ublas::matrix<double> MVP = ublas::prod(VP, M);
-
-    std::vector<sf::RectangleShape> res_vector;
-    res_vector.reserve(vertices_count_);
-
-    for (auto& vertex : vertices_) {
-      ublas::vector<double> res = ublas::prod(MVP, vertex);
-      res_vector.emplace_back(sf::Vector2f(3,3)).setPosition((res[0] / res[3] + 1) / 2 * window.getSize().x,
-                                                             (-res[2] / res[3] + 1) / 2 * window.getSize().y);
-    }
-
-    for(auto& res : res_vector) {
-      window.draw(res);
-    }
-  }
-};
-
 class Axes: public Shape {
  public:
 
@@ -72,7 +35,7 @@ class Axes: public Shape {
   }
 
   void draw(sf::RenderWindow& window, ublas::matrix<double>& VP) {
-    ublas::matrix<double> MVP = ublas::prod(VP, M);
+    ublas::matrix<double> MVP = ublas::prod(VP, M());
 
     sf::VertexArray res_arr (sf::Lines, vertices_.size());
     for (int i = 0; i < vertices_.size(); ++i) {
@@ -114,6 +77,45 @@ class Axes: public Shape {
   }
 };
 
+class Cube: public Shape {
+ public:
+
+  explicit Cube(const ublas::vector<double>& pos = ublas::zero_vector<double>(3),
+                double l = 1): Shape(pos) {
+    vertices_count_ = 8;
+
+    vertices_ = {
+        Point(-l/2, -l/2, -l/2),
+        Point(-l/2, -l/2, l/2),
+        Point(-l/2, l/2, -l/2),
+        Point(-l/2, l/2, l/2),
+        Point(l/2, -l/2, -l/2),
+        Point(l/2, -l/2, l/2),
+        Point(l/2, l/2, -l/2),
+        Point(l/2, l/2, l/2)
+    };
+  }
+
+  void draw(sf::RenderWindow& window, ublas::matrix<double>& VP) {
+    ublas::matrix<double> MVP = ublas::prod(VP, M());
+
+    std::vector<sf::RectangleShape> res_vector;
+    res_vector.reserve(vertices_count_);
+
+    for (auto& vertex : vertices_) {
+      ublas::vector<double> res = ublas::prod(MVP, vertex);
+      res_vector.emplace_back(sf::Vector2f(3,3)).setPosition((res[0] / res[3] + 1) / 2 * window.getSize().x,
+                                                             (-res[2] / res[3] + 1) / 2 * window.getSize().y);
+    }
+
+    for(auto& res : res_vector) {
+      window.draw(res);
+    }
+  }
+};
+
+
+
 int main()
 {
   int windowWidth = 1920;
@@ -131,11 +133,14 @@ int main()
   Camera camera(cam_pos, look_at);
   Screen screen(90, (float)windowWidth / windowHeight);
 
-  Axes axes;
+  Axes global_axes;
+  Axes local_axes(cube_pos, 0.2);
 
   sf::ContextSettings settings;
   settings.antialiasingLevel = 8;
   sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight), "my3d", sf::Style::Default, settings);
+
+  bool clear_mode = true;
 
   while (window.isOpen()) {
     ublas::matrix<double> VP = screen.P;
@@ -148,15 +153,25 @@ int main()
         window.close();
     }
 
-    window.clear();
+    if (clear_mode) {
+      window.clear();
+    }
     cube.draw(window, VP);
-    axes.draw(window, VP);
+    global_axes.draw(window, VP);
+    local_axes.draw(window, VP);
     window.display();
 
     ublas::vector<double> translate_to(3);
     translate_to <<= 0, 0, 0;
 
     {
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
+        clear_mode = true;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
+        clear_mode = false;
+      }
+
       double speed = 8;
       speed /= 10000;
       if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
@@ -181,6 +196,7 @@ int main()
         window.close();
       }
       cube.translate(translate_to);
+      local_axes.translate(translate_to);
 
       double x_scale = 1;
       double y_scale = 1;
@@ -233,6 +249,7 @@ int main()
       }
       if (sign != 0) {
         cube.rotate(sign * 0.05, axis, Cube::Coords::Local);
+        local_axes.rotate(sign * 0.05, axis, Cube::Coords::Local);
       }
     }
 

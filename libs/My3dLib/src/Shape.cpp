@@ -1,30 +1,82 @@
 #include "Shape.h"
 
-Shape::Shape(const vector& pos) : M(4, 4) {
-  M <<=
+Shape::Shape(): localScale_(4, 4),
+                localRotate_(4, 4),
+                localTranslate_(4, 4),
+                globalScale_(4, 4),
+                globalRotate_(4, 4),
+                globalTranslate_(4, 4) {
+
+  localScale_ <<=
       1, 0, 0, 0,
       0, 1, 0, 0,
       0, 0, 1, 0,
       0, 0, 0, 1;
 
+  localRotate_ <<=
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1;
+
+  localTranslate_ <<=
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1;
+
+  globalScale_ <<=
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1;
+
+  globalRotate_ <<=
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1;
+
+  globalTranslate_ <<=
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1;
+}
+
+Shape::Shape(const vector& pos) : Shape() {
   setPosition(pos);
 }
 
-void Shape::setPosition(const vector& pos) {
+void Shape::setPosition(const vector& pos, Coords coord) {
   if (pos.size() < 3) {
     throw std::invalid_argument("invalid size vector");
   }
 
-  for (int i = 0; i < 3; ++i) {
-    M(i, 3) = pos[i];
+  if (coord == Coords::Global) {;
+    for (int i = 0; i < 3; ++i) {
+      globalTranslate_(i, 3) = pos[i];
+    }
+  } else if (coord == Coords::Local) {
+    for (int i = 0; i < 3; ++i) {
+      localTranslate_(i, 3) = pos[i];
+    }
+  } else {
+    throw std::invalid_argument("Invalid coordinate system.");
   }
 }
-void Shape::translate(const vector& vec) {
+void Shape::translate(const vector& vec, Coords coord) {
   if (vec.size() < 3) {
     throw std::invalid_argument("invalid size vector");
   }
 
-  M = ublas::prod(getTranslationMatrix(vec), M);
+  if (coord == Coords::Global) {;
+    globalTranslate_ = ublas::prod(globalTranslate_, getTranslationMatrix(vec));
+  } else if (coord == Coords::Local) {
+    localTranslate_ = ublas::prod(localTranslate_, getTranslationMatrix(vec));
+  } else {
+    throw std::invalid_argument("Invalid coordinate system.");
+  }
 }
 void Shape::rotate(double angle, Axes axis, Coords coord) {
   if (coord == Coords::Global) {
@@ -35,8 +87,14 @@ void Shape::rotate(double angle, Axes axis, Coords coord) {
     throw std::invalid_argument("Invalid coordinate system.");
   }
 }
-void Shape::scale(double x, double y, double z) {
-  M = ublas::prod(M, getScaleMatrix(x, y, z));
+void Shape::scale(double x, double y, double z, Coords coord) {
+  if (coord == Coords::Global) {
+    globalScale_ = ublas::prod(globalScale_, getScaleMatrix(x, y, z));
+  } else if (coord == Coords::Local) {
+    localScale_ = ublas::prod(localScale_, getScaleMatrix(x, y, z));
+  } else {
+    throw std::invalid_argument("Invalid coordinate system.");
+  }
 }
 
 void Shape::localRotate(double angle, Axes axis) {
@@ -71,22 +129,22 @@ void Shape::globalRotate(double angle, Axes axis) {
 }
 
 void Shape::localOxRotate(double angle) {
-  M = ublas::prod(M, getOxRotateMatrix(angle));
+  localRotate_ = ublas::prod(localRotate_, getOxRotateMatrix(angle));
 }
 void Shape::localOyRotate(double angle) {
-  M = ublas::prod(M, getOyRotateMatrix(angle));
+  localRotate_ = ublas::prod(localRotate_, getOyRotateMatrix(angle));
 }
 void Shape::localOzRotate(double angle) {
-  M = ublas::prod(M, getOzRotateMatrix(angle));
+  localRotate_ = ublas::prod(localRotate_, getOzRotateMatrix(angle));
 }
 void Shape::globalOxRotate(double angle) {
-  M = ublas::prod(getOxRotateMatrix(angle), M);
+  globalRotate_ = ublas::prod(globalRotate_, getOxRotateMatrix(angle));
 }
 void Shape::globalOyRotate(double angle) {
-  M = ublas::prod(getOyRotateMatrix(angle), M);
+  globalRotate_ = ublas::prod(globalRotate_, getOyRotateMatrix(angle));
 }
 void Shape::globalOzRotate(double angle) {
-  M = ublas::prod(getOzRotateMatrix(angle), M);
+  globalRotate_ = ublas::prod(globalRotate_, getOzRotateMatrix(angle));
 }
 
 matrix Shape::getTranslationMatrix(const vector& vec) {
@@ -155,6 +213,15 @@ matrix Shape::getOzRotateMatrix(double angle) {
       0, 0, 0, 1;
 
   return R;
+}
+matrix Shape::M() {
+  // M = gT * gR * gS * lT * lR * lS
+  matrix res = ublas::prod(globalTranslate_, globalRotate_);
+  res = ublas::prod(res, globalScale_);
+  res = ublas::prod(res, localTranslate_);
+  res = ublas::prod(res, localRotate_);
+  res = ublas::prod(res, localScale_);
+  return res;
 }
 
 
