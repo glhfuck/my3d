@@ -156,43 +156,85 @@ int main()
     ublas::vector<double> translate_to(3);
     translate_to <<= 0, 0, 0;
 
-    double speed = 8;
-    speed /= 10000;
+    {
+      double speed = 8;
+      speed /= 10000;
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+        translate_to[1] -= speed;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+        translate_to[1] += speed;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+        translate_to[0] -= speed;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+        translate_to[0] += speed;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
+        translate_to[2] -= speed;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+        translate_to[2] += speed;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+        window.close();
+      }
+      cube.translate(translate_to);
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-    {
-      translate_to[1] -= speed;
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-    {
-      translate_to[1] += speed;
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-    {
-      translate_to[0] -= speed;
-    }
+      double x_scale = 1;
+      double y_scale = 1;
+      double z_scale = 1;
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Y)) {
+        x_scale -= 0.001;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::U)) {
+        x_scale += 0.001;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) {
+        y_scale -= 0.001;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::J)) {
+        y_scale += 0.001;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::N)) {
+        z_scale -= 0.001;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::M)) {
+        z_scale += 0.001;
+      }
+      cube.scale(x_scale, y_scale, z_scale);
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-    {
-      translate_to[0] += speed;
+      int sign = 0;
+      Cube::Axes axis;
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
+        sign -= 1;
+        axis = Axes::Ox;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::T)) {
+        sign += 1;
+        axis = Axes::Ox;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
+        sign -= 1;
+        axis = Axes::Oy;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::G)) {
+        sign += 1;
+        axis = Axes::Oy;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::V)) {
+        sign -= 1;
+        axis = Axes::Oz;
+      }
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::B)) {
+        sign += 1;
+        axis = Axes::Oz;
+      }
+      if (sign != 0) {
+        cube.rotate(sign * 0.05, axis, Cube::Coords::Local);
+      }
     }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
-    {
-      translate_to[2] -= speed;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-    {
-      translate_to[2] += speed;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-    {
-      window.close();
-    }
-
-    cube.translate(translate_to);
 
     //cube_pos[1] -= 0.0001;
     //cube.setPosition(cube_pos);
