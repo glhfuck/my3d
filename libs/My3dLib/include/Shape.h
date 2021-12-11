@@ -14,10 +14,31 @@ using zero_vector = ublas::zero_vector<double>;
 
 class Shape {
  public:
+  enum Axes {
+    Ox,
+    Oy,
+    Oz
+  };
+
+  enum Coords {
+    Global,
+    Local
+  };
+
   explicit Shape(const vector& pos = zero_vector(3));
 
   void setPosition(const vector& pos);
-  void translate(const vector& pos);
+  void translate(const vector& vec);
+  void rotate(double angle, Axes axis, Coords coord);
+  void scale(double x, double y, double z);
+
+ protected:
+  matrix M;
+  size_t vertices_count_ = 0;
+  std::vector<vector> vertices_;
+
+  void localRotate(double angle, Axes axis);
+  void globalRotate(double angle, Axes axis);
 
   void localOxRotate(double angle);
   void localOyRotate(double angle);
@@ -27,15 +48,13 @@ class Shape {
   void globalOyRotate(double angle);
   void globalOzRotate(double angle);
 
- protected:
-  matrix M;
-  size_t vertices_count_ = 0;
-  std::vector<vector> vertices_;
+  static matrix getTranslationMatrix(const vector& vec);
+
+  static matrix getScaleMatrix(double x, double y, double z);
 
   static matrix getOxRotateMatrix(double angle);
   static matrix getOyRotateMatrix(double angle);
   static matrix getOzRotateMatrix(double angle);
-  static matrix getTranslationMatrix(const vector& pos);
 };
 
 #endif //MY3D_SRC_SHAPE_H_
