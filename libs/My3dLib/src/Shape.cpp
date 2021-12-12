@@ -1,47 +1,14 @@
 #include "Shape.h"
 
-Shape::Shape(): localScale_(4, 4),
-                localRotate_(4, 4),
-                localTranslate_(4, 4),
-                globalScale_(4, 4),
-                globalRotate_(4, 4),
-                globalTranslate_(4, 4) {
+using namespace boost::numeric;
+using I = ublas::identity_matrix<double>;
 
-  localScale_ <<=
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1;
-
-  localRotate_ <<=
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1;
-
-  localTranslate_ <<=
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1;
-
-  globalScale_ <<=
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1;
-
-  globalRotate_ <<=
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1;
-
-  globalTranslate_ <<=
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1;
+Shape::Shape(): localScale_(I(4, 4)),
+                localRotate_(I(4, 4)),
+                localTranslate_(I(4, 4)),
+                globalScale_(I(4, 4)),
+                globalRotate_(I(4, 4)),
+                globalTranslate_(I(4, 4)) {
 }
 
 Shape::Shape(const vector& pos) : Shape() {
@@ -147,7 +114,7 @@ void Shape::globalOzRotate(double angle) {
   globalRotate_ = ublas::prod(globalRotate_, getOzRotateMatrix(angle));
 }
 
-matrix Shape::getTranslationMatrix(const vector& vec) {
+Shape::matrix Shape::getTranslationMatrix(const vector& vec) {
   matrix T(4, 4);
 
   T <<=
@@ -158,7 +125,7 @@ matrix Shape::getTranslationMatrix(const vector& vec) {
 
   return T;
 }
-matrix Shape::getScaleMatrix(double x, double y, double z) {
+Shape::matrix Shape::getScaleMatrix(double x, double y, double z) {
   matrix S(4, 4);
 
   S <<=
@@ -169,7 +136,7 @@ matrix Shape::getScaleMatrix(double x, double y, double z) {
 
   return S;
 }
-matrix Shape::getOxRotateMatrix(double angle) {
+Shape::matrix Shape::getOxRotateMatrix(double angle) {
   matrix R(4, 4);
 
   double rad_angle = angle * M_PI / 180;
@@ -184,7 +151,7 @@ matrix Shape::getOxRotateMatrix(double angle) {
 
   return R;
 }
-matrix Shape::getOyRotateMatrix(double angle) {
+Shape::matrix Shape::getOyRotateMatrix(double angle) {
   matrix R(4, 4);
 
   double rad_angle = angle * M_PI / 180;
@@ -199,7 +166,7 @@ matrix Shape::getOyRotateMatrix(double angle) {
 
   return R;
 }
-matrix Shape::getOzRotateMatrix(double angle) {
+Shape::matrix Shape::getOzRotateMatrix(double angle) {
   matrix R(4, 4);
 
   double rad_angle = angle * M_PI / 180;
@@ -214,7 +181,7 @@ matrix Shape::getOzRotateMatrix(double angle) {
 
   return R;
 }
-matrix Shape::M() {
+Shape::matrix Shape::M() {
   // M = gT * gR * gS * lT * lR * lS
   matrix res = ublas::prod(globalTranslate_, globalRotate_);
   res = ublas::prod(res, globalScale_);
@@ -223,9 +190,3 @@ matrix Shape::M() {
   res = ublas::prod(res, localScale_);
   return res;
 }
-
-
-
-
-
-

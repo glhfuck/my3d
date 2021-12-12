@@ -1,6 +1,7 @@
 #include "invert.h"
 #include "Camera.h"
 
+using namespace boost::numeric;
 
 Camera::Camera(const vector& pos,
                const vector& look_at,

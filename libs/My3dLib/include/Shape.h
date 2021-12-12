@@ -6,13 +6,11 @@
 #include "boost/numeric/ublas/assignment.hpp"
 #include "boost/numeric/ublas/io.hpp"
 
-using namespace boost::numeric;
-
-using matrix = ublas::matrix<double>;
-using vector = ublas::vector<double>;
-using zero_vector = ublas::zero_vector<double>;
 
 class Shape {
+  using matrix = boost::numeric::ublas::matrix<double>;
+  using vector = boost::numeric::ublas::vector<double>;
+
  public:
   enum Axes {
     Ox,
@@ -24,6 +22,7 @@ class Shape {
     Global,
     Local
   };
+
   Shape();
   explicit Shape(const vector& pos);
 
@@ -31,19 +30,20 @@ class Shape {
   void translate(const vector& vec, Coords coord = Coords::Global);
   void rotate(double angle, Axes axis, Coords coord);
   void scale(double x, double y, double z, Coords coord = Coords::Local);
+
+  std::vector<vector> vertices_;
+  std::vector<vector> normals_;
+  matrix M();
  protected:
   // TODO Maybe add pos?
-  matrix M();
 
+ private:
   matrix localScale_;
   matrix localRotate_;
   matrix localTranslate_;
   matrix globalScale_;
   matrix globalRotate_;
   matrix globalTranslate_;
-
-  size_t vertices_count_ = 0;
-  std::vector<vector> vertices_;
 
   void localRotate(double angle, Axes axis);
   void globalRotate(double angle, Axes axis);
