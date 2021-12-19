@@ -24,7 +24,6 @@ class Transformable {
   };
 
   Transformable();
-  explicit Transformable(const vector& pos);
 
   void setPosition(const vector& pos, Coords coord = Coords::Global);
   void translate(const vector& vec, Coords coord = Coords::Global);

@@ -8,7 +8,6 @@ class Shape: public Transformable {
 
  public:
   Shape();
-  explicit Shape(const vector& pos);
 
   struct Facet {
     struct VertexInfo {

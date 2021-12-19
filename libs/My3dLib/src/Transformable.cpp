@@ -11,10 +11,6 @@ Transformable::Transformable(): localScale_(I(4, 4)),
                 globalTranslate_(I(4, 4)) {
 }
 
-Transformable::Transformable(const vector& pos) : Transformable() {
-  setPosition(pos);
-}
-
 void Transformable::setPosition(const vector& pos, Coords coord) {
   if (pos.size() < 3) {
     throw std::invalid_argument("Invalid size vector");
