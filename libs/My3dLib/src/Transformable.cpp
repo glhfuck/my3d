@@ -32,6 +32,7 @@ void Transformable::setPosition(const vector& pos, Coords coord) {
     throw std::invalid_argument("Invalid coordinate system.");
   }
 }
+
 void Transformable::translate(const vector& vec, Coords coord) {
   if (vec.size() < 3) {
     throw std::invalid_argument("Invalid size vector");
@@ -45,6 +46,7 @@ void Transformable::translate(const vector& vec, Coords coord) {
     throw std::invalid_argument("Invalid coordinate system.");
   }
 }
+
 void Transformable::rotate(double angle, Axes axis, Coords coord) {
   if (coord == Coords::Global) {
     globalRotate(angle, axis);
@@ -54,6 +56,7 @@ void Transformable::rotate(double angle, Axes axis, Coords coord) {
     throw std::invalid_argument("Invalid coordinate system.");
   }
 }
+
 void Transformable::scale(double x, double y, double z, Coords coord) {
   if (coord == Coords::Global) {
     globalScale_ = ublas::prod(globalScale_, getScaleMatrix(x, y, z));
@@ -63,6 +66,18 @@ void Transformable::scale(double x, double y, double z, Coords coord) {
     throw std::invalid_argument("Invalid coordinate system.");
   }
 }
+
+Transformable::matrix Transformable::M() const {
+  // M = gT * gR * gS * lT * lR * lS
+  matrix res = ublas::prod(globalTranslate_, globalRotate_);
+  res = ublas::prod(res, globalScale_);
+  res = ublas::prod(res, localTranslate_);
+  res = ublas::prod(res, localRotate_);
+  res = ublas::prod(res, localScale_);
+  return res;
+}
+
+//-------------------------PRIVATE-------------------------
 
 void Transformable::localRotate(double angle, Axes axis) {
   switch (axis) {
@@ -79,6 +94,7 @@ void Transformable::localRotate(double angle, Axes axis) {
 
   throw std::invalid_argument("Invalid axis.");
 }
+
 void Transformable::globalRotate(double angle, Axes axis) {
   switch (axis) {
     case Axes::Ox :
@@ -98,21 +114,27 @@ void Transformable::globalRotate(double angle, Axes axis) {
 void Transformable::localOxRotate(double angle) {
   localRotate_ = ublas::prod(localRotate_, getOxRotateMatrix(angle));
 }
+
 void Transformable::localOyRotate(double angle) {
   localRotate_ = ublas::prod(localRotate_, getOyRotateMatrix(angle));
 }
+
 void Transformable::localOzRotate(double angle) {
   localRotate_ = ublas::prod(localRotate_, getOzRotateMatrix(angle));
 }
+
 void Transformable::globalOxRotate(double angle) {
   globalRotate_ = ublas::prod(globalRotate_, getOxRotateMatrix(angle));
 }
+
 void Transformable::globalOyRotate(double angle) {
   globalRotate_ = ublas::prod(globalRotate_, getOyRotateMatrix(angle));
 }
+
 void Transformable::globalOzRotate(double angle) {
   globalRotate_ = ublas::prod(globalRotate_, getOzRotateMatrix(angle));
 }
+
 
 Transformable::matrix Transformable::getTranslationMatrix(const vector& vec) {
   matrix T(4, 4);
@@ -125,6 +147,7 @@ Transformable::matrix Transformable::getTranslationMatrix(const vector& vec) {
 
   return T;
 }
+
 Transformable::matrix Transformable::getScaleMatrix(double x, double y, double z) {
   matrix S(4, 4);
 
@@ -136,6 +159,7 @@ Transformable::matrix Transformable::getScaleMatrix(double x, double y, double z
 
   return S;
 }
+
 Transformable::matrix Transformable::getOxRotateMatrix(double angle) {
   matrix R(4, 4);
 
@@ -151,6 +175,7 @@ Transformable::matrix Transformable::getOxRotateMatrix(double angle) {
 
   return R;
 }
+
 Transformable::matrix Transformable::getOyRotateMatrix(double angle) {
   matrix R(4, 4);
 
@@ -166,6 +191,7 @@ Transformable::matrix Transformable::getOyRotateMatrix(double angle) {
 
   return R;
 }
+
 Transformable::matrix Transformable::getOzRotateMatrix(double angle) {
   matrix R(4, 4);
 
@@ -180,13 +206,4 @@ Transformable::matrix Transformable::getOzRotateMatrix(double angle) {
       0, 0, 0, 1;
 
   return R;
-}
-Transformable::matrix Transformable::M() {
-  // M = gT * gR * gS * lT * lR * lS
-  matrix res = ublas::prod(globalTranslate_, globalRotate_);
-  res = ublas::prod(res, globalScale_);
-  res = ublas::prod(res, localTranslate_);
-  res = ublas::prod(res, localRotate_);
-  res = ublas::prod(res, localScale_);
-  return res;
 }

@@ -31,7 +31,7 @@ class Transformable {
   void rotate(double angle, Axes axis, Coords coord);
   void scale(double x, double y, double z, Coords coord = Coords::Local);
 
-  matrix M();
+  matrix M() const;
 
  private:
   matrix localScale_;
