@@ -12,9 +12,9 @@ using matrix = ublas::matrix<double>;
 using vector = ublas::vector<double>;
 using zero_vector = ublas::zero_vector<double>;
 
-class Screen {
+class Lens {
  public:
-  explicit Screen(double fov = 75,
+  explicit Lens(double fov = 75,
                   double ratio = 1,
                   double near = 1,
                   double far = 100);

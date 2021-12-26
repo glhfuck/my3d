@@ -1,7 +1,7 @@
-#include "../include/Screen.h"
+#include "../include/Lens.h"
 #include <cmath>
 
-Screen::Screen(double fov,
+Lens::Lens(double fov,
                double ratio,
                double near,
                double far): P(4,4) {
