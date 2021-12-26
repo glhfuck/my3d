@@ -4,29 +4,31 @@
 #include <cstdlib>
 
 template <typename T>
-class Framebuffer {
+class FrameBuffer {
  public:
-  Framebuffer(size_t rows, size_t columns);
+  FrameBuffer(size_t rows, size_t columns);
 
   T** getBuffer();
   T* getData();
 
-  ~Framebuffer();
+  ~FrameBuffer();
 
-  const size_t MAX_COLUMN_INDEX;
-  const size_t MAX_ROW_INDEX;
+  const size_t ROWS_COUNT;
+  const size_t COLUMNS_COUNT;
 
+  const size_t DATA_SIZE;
  private:
   T** buff_;
   T* data_;
 };
 
 template <typename T>
-Framebuffer<T>::Framebuffer(size_t rows, size_t columns) :
-    MAX_COLUMN_INDEX(columns - 1),
-    MAX_ROW_INDEX(rows - 1) {
-  size_t sz = rows * sizeof(T*) + rows * columns * sizeof(T);
-  buff_ = (T**) calloc(sz, 1);
+FrameBuffer<T>::FrameBuffer(size_t rows, size_t columns) :
+    ROWS_COUNT(rows),
+    COLUMNS_COUNT(columns),
+    DATA_SIZE(rows * columns * sizeof(T)) {
+  size_t buffer_size = rows * sizeof(T*) + DATA_SIZE;
+  buff_ = (T**) malloc(buffer_size);
   data_ = (T*) (buff_ + rows);
 
   for (int i = 0; i < rows; ++i) {
@@ -35,17 +37,17 @@ Framebuffer<T>::Framebuffer(size_t rows, size_t columns) :
 }
 
 template <typename T>
-T** Framebuffer<T>::getBuffer() {
+T** FrameBuffer<T>::getBuffer() {
   return buff_;
 }
 
 template <typename T>
-T* Framebuffer<T>::getData() {
+T* FrameBuffer<T>::getData() {
   return data_;
 }
 
 template <typename T>
-Framebuffer<T>::~Framebuffer() {
+FrameBuffer<T>::~FrameBuffer() {
   free(buff_);
 }
 
