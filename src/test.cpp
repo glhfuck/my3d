@@ -1,267 +1,163 @@
 #include <iostream>
+#include <string>
+#include <chrono>
+
 #include "../libs/My3dLib/include/Shape.h"
 #include "../libs/My3dLib/include/Camera.h"
-#include "../libs/My3dLib/include/Screen.h"
+#include "../libs/My3dLib/include/Lens.h"
+#include "../libs/My3dLib/include/Rasterizer.h"
+#include "../libs/My3dLib/include/Obj_loader.h"
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
+#include "SDL2/SDL.h"
 
-class Point {
- public:
-  Point(double x, double y, double z): x(x), y(y), z(z) {}
+int windowCreate () {
+  const size_t SCREEN_WIDTH = 1280;
+  const size_t SCREEN_HEIGHT = 800;
 
-  operator ublas::vector<double>() {
-    ublas::vector<double> vec(4);
-    vec <<= x, y, z, 1;
-    return vec;
+  SDL_Init(SDL_INIT_VIDEO);
+
+  SDL_Window* window = SDL_CreateWindow("my3d",
+                                        SDL_WINDOWPOS_CENTERED,
+                                        SDL_WINDOWPOS_CENTERED,
+                                        SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_ALLOW_HIGHDPI);
+
+
+  SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+
+
+  if(!renderer) {
+    fprintf(stderr, "Could not create renderer\n");
+    return 1;
   }
 
-  double x;
-  double y;
-  double z;
-};
+  int win_w, win_h;
+  SDL_GetWindowSize(window, &win_w, &win_h);
+  std::cout << win_w << ' ' << win_h << std::endl;
 
-class Axes: public Shape {
- public:
-
-  explicit Axes(const ublas::vector<double>& pos = ublas::zero_vector<double>(3),
-                double l = 1): Shape(pos) {
-    vertices_ = {
-        Point(0, 0, 0),
-        Point(0, 0, l),
-        Point(0, l, 0),
-        Point(l, 0, 0),
-    };
-  }
-
-  void draw(sf::RenderWindow& window, ublas::matrix<double>& VP) {
-    ublas::matrix<double> MVP = ublas::prod(VP, M());
-
-    sf::VertexArray res_arr (sf::Lines, vertices_.size());
-    for (int i = 0; i < vertices_.size(); ++i) {
-      ublas::vector<double> res = ublas::prod(MVP, vertices_[i]);
-      res_arr[i] = sf::Vector2f(((res[0] / res[3] + 1) / 2 * window.getSize().x),
-                                (-res[2] / res[3] + 1)  / 2 * window.getSize().y);
-    }
-
-    sf::Vertex Ox[] =
-        {
-            res_arr[0],
-            res_arr[1]
-        };
-
-    Ox[0].color = sf::Color::Red;
-    Ox[1].color = sf::Color::Red;
-
-    sf::Vertex Oy[] =
-        {
-            res_arr[0],
-            res_arr[2]
-        };
-
-    Oy[0].color = sf::Color::Green;
-    Oy[1].color = sf::Color::Green;
-
-    sf::Vertex Oz[] =
-        {
-            res_arr[0],
-            res_arr[3]
-        };
-
-    Oz[0].color = sf::Color::Blue;
-    Oz[1].color = sf::Color::Blue;
-
-    window.draw(Ox, 2, sf::Lines);
-    window.draw(Oy, 2, sf::Lines);
-    window.draw(Oz, 2, sf::Lines);
-  }
-};
-
-class Cube: public Shape {
- public:
-
-  explicit Cube(const ublas::vector<double>& pos = ublas::zero_vector<double>(3),
-                double l = 1): Shape(pos) {
-    vertices_count_ = 8;
-
-    vertices_ = {
-        Point(-l/2, -l/2, -l/2),
-        Point(-l/2, -l/2, l/2),
-        Point(-l/2, l/2, -l/2),
-        Point(-l/2, l/2, l/2),
-        Point(l/2, -l/2, -l/2),
-        Point(l/2, -l/2, l/2),
-        Point(l/2, l/2, -l/2),
-        Point(l/2, l/2, l/2)
-    };
-  }
-
-  void draw(sf::RenderWindow& window, ublas::matrix<double>& VP) {
-    ublas::matrix<double> MVP = ublas::prod(VP, M());
-
-    std::vector<sf::RectangleShape> res_vector;
-    res_vector.reserve(vertices_count_);
-
-    for (auto& vertex : vertices_) {
-      ublas::vector<double> res = ublas::prod(MVP, vertex);
-      res_vector.emplace_back(sf::Vector2f(3,3)).setPosition((res[0] / res[3] + 1) / 2 * window.getSize().x,
-                                                             (-res[2] / res[3] + 1) / 2 * window.getSize().y);
-    }
-
-    for(auto& res : res_vector) {
-      window.draw(res);
-    }
-  }
-};
+  int gw, gh;
+  SDL_GL_GetDrawableSize(window, &gw, &gh);
+  std::cout << gw << ' ' << gh << std::endl;
 
 
+  SDL_Texture* texture = SDL_CreateTexture(renderer,
+                                           SDL_PIXELFORMAT_ARGB8888,
+                                           SDL_TEXTUREACCESS_STREAMING,
+                                           win_w, win_h);
 
-int main()
-{
-  int windowWidth = 1920;
-  int windowHeight = 1200;
+  Rasterizer raster(win_w, win_h);
 
-  ublas::vector<double> cube_pos(3);
-  cube_pos <<= 1, 1, 0;
-  Cube cube(cube_pos);
+  Shape ghost = Obj_loader::getShape("../pantasma02.obj");
+  //Shape ghost = Obj_loader::getShape("../untitled-scene.obj");
 
   ublas::vector<double> cam_pos(3);
-  cam_pos <<= 2.2, 4, 0.5;
+  //cam_pos <<= 5, 5, 5;
+  cam_pos <<= 20, 20, 20;
+  //cam_pos <<= 45, 45, 45;
+  Camera camera(cam_pos);
 
-  ublas::vector<double> look_at(3);
-  look_at = cube_pos + ublas::scalar_vector<double>(3,0.5);
-  Camera camera(cam_pos, look_at);
-  Screen screen(90, (float)windowWidth / windowHeight);
+  Lens screen(80, (double) win_w / win_h, 18, 30);
 
-  Axes global_axes;
-  Axes local_axes(cube_pos, 0.2);
+  Transformable::Axes axis = Transformable::Axes::Ox;
+  Transformable::Coords coord = Transformable::Coords::Global;
 
-  sf::ContextSettings settings;
-  settings.antialiasingLevel = 8;
-  sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight), "my3d", sf::Style::Default, settings);
-
-  bool clear_mode = true;
-
-  while (window.isOpen()) {
-    ublas::matrix<double> VP = screen.P;
-    VP = ublas::prod(VP, camera.V);
-
-    sf::Event event;
-    while (window.pollEvent(event))
-    {
-      if (event.type == sf::Event::Closed)
-        window.close();
-    }
-
-    if (clear_mode) {
-      window.clear();
-    }
-    cube.draw(window, VP);
-    global_axes.draw(window, VP);
-    local_axes.draw(window, VP);
-    window.display();
+  bool quit = false;
+  while (!quit) {
+    auto start = std::chrono::high_resolution_clock::now();
+    SDL_Event e;
 
     ublas::vector<double> translate_to(3);
     translate_to <<= 0, 0, 0;
+    double speed = 0.100;
+    int sign = 0;
 
-    {
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
-        clear_mode = true;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
-        clear_mode = false;
+    while (SDL_PollEvent(&e)) {
+      if (e.type == SDL_QUIT) {
+        quit = true;
       }
 
-      double speed = 8;
-      speed /= 10000;
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-        translate_to[1] -= speed;
+      if (e.type == SDL_KEYDOWN) {
+        if (e.key.keysym.sym == SDLK_w) {
+          translate_to[0] += speed;
+        }
+        if (e.key.keysym.sym == SDLK_s) {
+          translate_to[0] -= speed;
+        }
+        if (e.key.keysym.sym == SDLK_a) {
+          translate_to[1] -= speed;
+        }
+        if (e.key.keysym.sym == SDLK_d) {
+          translate_to[1] += speed;
+        }
+        if (e.key.keysym.sym == SDLK_TAB) {
+          translate_to[2] -= speed;
+        }
+        if (e.key.keysym.sym == SDLK_SPACE) {
+          translate_to[2] += speed;
+        }
+        if (e.key.keysym.sym == SDLK_q) {
+          sign -= 1;
+        }
+        if (e.key.keysym.sym == SDLK_e) {
+          sign += 1;
+        }
+        if (e.key.keysym.sym == SDLK_z) {
+          axis = Transformable::Axes::Ox;
+        }
+        if (e.key.keysym.sym == SDLK_x) {
+          axis = Transformable::Axes::Oy;
+        }
+        if (e.key.keysym.sym == SDLK_c) {
+          axis = Transformable::Axes::Oz;
+        }
+        if (e.key.keysym.sym == SDLK_g) {
+          coord = Transformable::Coords::Global;
+        }
+        if (e.key.keysym.sym == SDLK_l) {
+          coord = Transformable::Coords::Local;
+        }
+        if (e.key.keysym.sym == SDLK_v) {
+          raster.setRenderingMode(Rasterizer::RenderingMode::Facets);
+        }
+        if (e.key.keysym.sym == SDLK_b) {
+          raster.setRenderingMode(Rasterizer::RenderingMode::Edges);
+        }
+        if (e.key.keysym.sym == SDLK_n) {
+          raster.setRenderingMode(Rasterizer::RenderingMode::Vertices);
+        }
+        if (e.key.keysym.sym == SDLK_o) {
+          raster.setFillingMode(Rasterizer::FillingMode::Colored);
+        }
+        if (e.key.keysym.sym == SDLK_p) {
+          raster.setFillingMode(Rasterizer::FillingMode::Depth);
+        }
       }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-        translate_to[1] += speed;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-        translate_to[0] -= speed;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-        translate_to[0] += speed;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
-        translate_to[2] -= speed;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-        translate_to[2] += speed;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
-        window.close();
-      }
-      cube.translate(translate_to);
-      local_axes.translate(translate_to);
 
-      double x_scale = 1;
-      double y_scale = 1;
-      double z_scale = 1;
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Y)) {
-        x_scale -= 0.001;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::U)) {
-        x_scale += 0.001;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) {
-        y_scale -= 0.001;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::J)) {
-        y_scale += 0.001;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::N)) {
-        z_scale -= 0.001;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::M)) {
-        z_scale += 0.001;
-      }
-      cube.scale(x_scale, y_scale, z_scale);
-
-      int sign = 0;
-      Cube::Axes axis;
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
-        sign -= 1;
-        axis = Axes::Ox;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::T)) {
-        sign += 1;
-        axis = Axes::Ox;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
-        sign -= 1;
-        axis = Axes::Oy;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::G)) {
-        sign += 1;
-        axis = Axes::Oy;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::V)) {
-        sign -= 1;
-        axis = Axes::Oz;
-      }
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::B)) {
-        sign += 1;
-        axis = Axes::Oz;
-      }
-      if (sign != 0) {
-        cube.rotate(sign * 0.05, axis, Cube::Coords::Local);
-        local_axes.rotate(sign * 0.05, axis, Cube::Coords::Local);
+      if (e.type == SDL_MOUSEBUTTONDOWN) {
+        quit = true;
       }
     }
 
-    //cube_pos[1] -= 0.0001;
-    //cube.setPosition(cube_pos);
-    //cube.translate(Point(-0.0001, -0.0001,0));
-    //cube.localOxRotate(0.05);
-    //cube.globalOzRotate(0.05);
+    ghost.translate(translate_to, coord);
+    ghost.rotate(sign * 0.5, axis, coord);
 
+    raster.clear();
 
-    //sf::sleep(sf::seconds(1));
+    raster.drawShape(ghost, camera, screen);
 
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> duration = end - start;
+    std::cout << duration.count() << std::endl;
+
+    SDL_UpdateTexture(texture , NULL, raster.getFrameBuffer(), win_w * sizeof (uint32_t));
+    SDL_RenderCopy(renderer, texture , NULL, NULL);
+    SDL_RenderPresent(renderer);
   }
-  return EXIT_SUCCESS;
+
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+  return 0;
+};
+
+int main() {
+  windowCreate();
 }
