@@ -4,34 +4,32 @@ project(my3d)
 set(CMAKE_CXX_STANDARD 23)
 
 #------------------BOOST------------------
-set(BOOST_ROOT "/usr/local/boost_1_77_0")
 find_package(Boost)
 if (NOT Boost_FOUND)
     message(FATAL_ERROR "Could not find Boost!")
 endif ()
 #-----------------------------------------
 
-#------------------SFML-------------------
-find_package(SFML 2.5 COMPONENTS graphics window REQUIRED)
-if (NOT SFML_FOUND)
-    message(FATAL_ERROR "Could not find SFML!")
+#------------------SDL2-------------------
+find_package(SDL2 REQUIRED)
+if (NOT SDL2_FOUND)
+    message(FATAL_ERROR "Could not find SDL2!")
 endif ()
 #-----------------------------------------
 
+
 include_directories(
-        ${Boost_INCLUDE_DIR}
-        ${SFML_INCLUDE_DIR}
         include
+        ${Boost_INCLUDE_DIR}
+        ${SDL2_INCLUDE_DIR}
 )
 
 add_subdirectory(libs/My3dLib)
-#add_subdirectory(libs/MyRaster)
 add_executable(${PROJECT_NAME} src/test.cpp)
 
 target_link_libraries(${PROJECT_NAME}
         My3dLib
-        sfml-graphics
-        sfml-window
+        ${SDL2_LIBRARIES}
         )
 
 
