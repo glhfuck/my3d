@@ -57,8 +57,8 @@ int windowCreate () {
 
   Lens screen(80, (double) win_w / win_h, 18, 30);
 
-  Transformable::Axes axis = Transformable::Axes::Ox;
-  Transformable::Coords coord = Transformable::Coords::Global;
+  Transformer::Axes axis = Transformer::Axes::Ox;
+  Shape::Coords coord = Shape::Coords::Global;
 
   bool quit = false;
   while (!quit) {
@@ -101,19 +101,19 @@ int windowCreate () {
           sign += 1;
         }
         if (e.key.keysym.sym == SDLK_z) {
-          axis = Transformable::Axes::Ox;
+          axis = Transformer::Axes::Ox;
         }
         if (e.key.keysym.sym == SDLK_x) {
-          axis = Transformable::Axes::Oy;
+          axis = Transformer::Axes::Oy;
         }
         if (e.key.keysym.sym == SDLK_c) {
-          axis = Transformable::Axes::Oz;
+          axis = Transformer::Axes::Oz;
         }
         if (e.key.keysym.sym == SDLK_g) {
-          coord = Transformable::Coords::Global;
+          coord = Shape::Coords::Global;
         }
         if (e.key.keysym.sym == SDLK_l) {
-          coord = Transformable::Coords::Local;
+          coord = Shape::Coords::Local;
         }
         if (e.key.keysym.sym == SDLK_v) {
           raster.setRenderingMode(Rasterizer::RenderingMode::Facets);
