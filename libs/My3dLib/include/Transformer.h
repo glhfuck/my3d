@@ -19,11 +19,6 @@ class Transformer {
     Oz
   };
 
-  enum Coords {
-    Global,
-    Local
-  };
-
   Transformer();
 
   void setPosition(const vector& pos);

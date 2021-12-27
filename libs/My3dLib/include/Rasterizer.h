@@ -32,34 +32,23 @@ class Rasterizer {
 
   Rasterizer(size_t width, size_t height);
 
-  void drawShape(const Shape& shape,
-            const Camera& camera,
-            const Lens& lens);
-
-  void drawShapeVertices(const Shape& shape,
-                         const Camera& camera,
-                         const Lens& lens);
-
-  void drawShapeEdges(const Shape& shape,
-                      const Camera& camera,
-                      const Lens& lens);
-
-  void drawShapeFacets(const Shape& shape,
-                       const Camera& camera,
-                       const Lens& lens);
-
+  uint32_t* getFrameBuffer();
+  void drawShape(const Shape& shape, const Camera& camera, const Lens& lens);
   void setRenderingMode(const RenderingMode& rm);
   void setFillingMode(const FillingMode& fm);
-  uint32_t* getFrameBuffer();
   void clear();
 
  private:
-  RenderingMode rendering_mode_ = Facets;
-  FillingMode filling_mode_ = Colored;
-
   FrameBuffer<uint32_t> frame_buff_;
   FrameBuffer<double> depth_buff_;
   FrameBuffer<Point> triangular_outline_;
+
+  RenderingMode rendering_mode_ = Facets;
+  FillingMode filling_mode_ = Colored;
+
+  void drawShapeVertices(const Shape& shape, const Camera& camera, const Lens& lens);
+  void drawShapeEdges(const Shape& shape, const Camera& camera, const Lens& lens);
+  void drawShapeFacets(const Shape& shape, const Camera& camera, const Lens& lens);
 
   void drawPoint(const Point& p);
   void drawLine(const Point& p1, const Point& p2, const Color& color);
