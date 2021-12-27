@@ -1,5 +1,5 @@
-#ifndef MY3D_SRC_CAMERA_H_
-#define MY3D_SRC_CAMERA_H_
+#ifndef MY3D_LIBS_MY3DLIB_SRC_CAMERA_H_
+#define MY3D_LIBS_MY3DLIB_SRC_CAMERA_H_
 
 #include "boost/numeric/ublas/matrix.hpp"
 #include "boost/numeric/ublas/vector.hpp"
@@ -24,4 +24,4 @@ class Camera {
   matrix V;
 };
 
-#endif //MY3D_SRC_CAMERA_H_
+#endif //MY3D_LIBS_MY3DLIB_SRC_CAMERA_H_

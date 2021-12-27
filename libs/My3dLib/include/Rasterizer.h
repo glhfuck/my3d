@@ -1,5 +1,5 @@
-#ifndef MY3D_LIBS_MYRASTER_SRC_RASTERIZER_H_
-#define MY3D_LIBS_MYRASTER_SRC_RASTERIZER_H_
+#ifndef MY3D_LIBS_MY3DLIB_SRC_RASTERIZER_H_
+#define MY3D_LIBS_MY3DLIB_SRC_RASTERIZER_H_
 
 #include <cstdint>
 
@@ -75,4 +75,4 @@ class Rasterizer {
   void clearTriangularOutline();
 };
 
-#endif //MY3D_LIBS_MYRASTER_SRC_RASTERIZER_H_
+#endif //MY3D_LIBS_MY3DLIB_SRC_RASTERIZER_H_
