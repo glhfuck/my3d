@@ -18,7 +18,7 @@ class FrameBuffer {
 
   const size_t DATA_SIZE;
  private:
-  T** buff_;
+  T** buffer_;
   T* data_;
 };
 
@@ -28,17 +28,17 @@ FrameBuffer<T>::FrameBuffer(size_t rows, size_t columns) :
     COLUMNS_COUNT(columns),
     DATA_SIZE(rows * columns * sizeof(T)) {
   size_t buffer_size = rows * sizeof(T*) + DATA_SIZE;
-  buff_ = (T**) malloc(buffer_size);
-  data_ = (T*) (buff_ + rows);
+  buffer_ = (T**) malloc(buffer_size);
+  data_ = (T*) (buffer_ + rows);
 
   for (int i = 0; i < rows; ++i) {
-    buff_[i] = data_ + i * columns;
+    buffer_[i] = data_ + i * columns;
   }
 }
 
 template <typename T>
 T** FrameBuffer<T>::getBuffer() {
-  return buff_;
+  return buffer_;
 }
 
 template <typename T>
@@ -48,7 +48,7 @@ T* FrameBuffer<T>::getData() {
 
 template <typename T>
 FrameBuffer<T>::~FrameBuffer() {
-  free(buff_);
+  free(buffer_);
 }
 
 #endif //MY3D_LIBS_MY3DLIB_SRC_FRAMEBUFFER_H_

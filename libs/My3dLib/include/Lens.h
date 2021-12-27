@@ -1,5 +1,5 @@
-#ifndef MY3D_SRC_SCREEN_H_
-#define MY3D_SRC_SCREEN_H_
+#ifndef MY3D_SRC_LENS_H_
+#define MY3D_SRC_LENS_H_
 
 #include "boost/numeric/ublas/matrix.hpp"
 #include "boost/numeric/ublas/vector.hpp"
@@ -10,7 +10,6 @@ using namespace boost::numeric;
 
 using matrix = ublas::matrix<double>;
 using vector = ublas::vector<double>;
-using zero_vector = ublas::zero_vector<double>;
 
 class Lens {
  public:
@@ -22,4 +21,4 @@ class Lens {
   matrix P;
 };
 
-#endif //MY3D_SRC_SCREEN_H_
+#endif //MY3D_SRC_LENS_H_
