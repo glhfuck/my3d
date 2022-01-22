@@ -3,71 +3,86 @@
 using namespace boost::numeric;
 using I = ublas::identity_matrix<double>;
 
-Transformer::Transformer():
-                scale_(I(4, 4)),
-                rotate_(I(4, 4)),
-                translate_(I(4, 4)) {
+Transformer::Transformer() {
 }
 
-void Transformer::setPosition(const vector& pos) {
-  if (pos.size() < 3) {
-    throw std::invalid_argument("Invalid size vector");
-  }
-
-  for (int i = 0; i < 3; ++i) {
-    translate_(i, 3) = pos[i];
-  }
-}
-
-void Transformer::translate(const vector& vec) {
-  if (vec.size() < 3) {
-    throw std::invalid_argument("Invalid size vector");
-  }
-
-  translate_ = ublas::prod(translate_, getTranslationMatrix(vec));
-}
-
-void Transformer::rotate(double angle, Axes axis) {
-  switch (axis) {
-    case Axes::Ox :
-      rotate_ = ublas::prod(rotate_, getOxRotateMatrix(angle));
-      break;
-    case Axes::Oy :
-      rotate_ = ublas::prod(rotate_, getOyRotateMatrix(angle));
-      break;
-    case Axes::Oz :
-      rotate_ = ublas::prod(rotate_, getOzRotateMatrix(angle));
-      break;
-    default:
-      throw std::invalid_argument("Invalid axis.");
-  }
-}
-
-void Transformer::scale(double x, double y, double z) {
-  scale_ = ublas::prod(scale_, getScaleMatrix(x, y, z));
-}
-
-Transformer::matrix Transformer::getResultMatrix() const {
-  matrix res = ublas::prod(translate_, rotate_);
-  res = ublas::prod(res, scale_);
+Transformer::matrix Transformer::getRTS() const {
+  matrix res = ublas::prod(getRotationMatrix(), getTranslationMatrix());
+  res = ublas::prod(res, getScalingMatrix());
   return res;
+}
+
+Transformer::matrix Transformer::getResultingMatrix() const {
+  matrix res = ublas::prod(getTranslationMatrix(), getRotationMatrix());
+  res = ublas::prod(res, getScalingMatrix());
+  return res;
+}
+
+Transformer::matrix Transformer::getTranslationMatrix() const {
+  return TranslationMatrix(x_position_, y_position_, z_position_);
+}
+
+Transformer::matrix Transformer::getRotationMatrix() const {
+  matrix res = ublas::prod(OzRotationMatrix(z_angle_), OxRotationMatrix(x_angle_));
+  res = ublas::prod(res, OyRotationMatrix(y_angle_));
+  return res;
+}
+
+Transformer::matrix Transformer::getScalingMatrix() const {
+  return ScalingMatrix(x_scale_, y_scale_, z_scale_);
+}
+
+void Transformer::SetPosition(double x, double y, double z) {
+  x_position_ = x;
+  y_position_ = y;
+  z_position_ = z;
+}
+
+void Transformer::Translate(double delta_x, double delta_y, double delta_z) {
+  x_position_ += delta_x;
+  y_position_ += delta_y;
+  z_position_ += delta_z;
+}
+
+void Transformer::SetRotate(double aroundOx, double aroundOy, double aroundOz) {
+  x_angle_ = aroundOx;
+  y_angle_ = aroundOy;
+  z_angle_ = aroundOz;
+}
+
+void Transformer::Rotate(double aroundOx, double aroundOy, double aroundOz) {
+  x_angle_ += aroundOx;
+  y_angle_ += aroundOy;
+  z_angle_ += aroundOz;
+}
+
+void Transformer::SetScale(double x, double y, double z) {
+  x_scale_ = x;
+  y_scale_ = y;
+  z_scale_ = z;
+}
+
+void Transformer::Scale(double x, double y, double z) {
+  x_scale_ *= x;
+  y_scale_ *= y;
+  z_scale_ *= z;
 }
 
 //-------------------------PRIVATE-------------------------
 
-Transformer::matrix Transformer::getTranslationMatrix(const vector& vec) {
+Transformer::matrix Transformer::TranslationMatrix(double x, double y, double z) {
   matrix T(4, 4);
 
   T <<=
-      1, 0, 0, vec[0],
-      0, 1, 0, vec[1],
-      0, 0, 1, vec[2],
+      1, 0, 0, x,
+      0, 1, 0, y,
+      0, 0, 1, z,
       0, 0, 0, 1;
 
   return T;
 }
 
-Transformer::matrix Transformer::getScaleMatrix(double x, double y, double z) {
+Transformer::matrix Transformer::ScalingMatrix(double x, double y, double z) {
   matrix S(4, 4);
 
   S <<=
@@ -79,12 +94,10 @@ Transformer::matrix Transformer::getScaleMatrix(double x, double y, double z) {
   return S;
 }
 
-Transformer::matrix Transformer::getOxRotateMatrix(double angle) {
+Transformer::matrix Transformer::OxRotationMatrix(double angle) {
   matrix R(4, 4);
-
-  double rad_angle = angle * M_PI / 180;
-  double c = std::cos(rad_angle);
-  double s = std::sin(rad_angle);
+  double c = std::cos(angle);
+  double s = std::sin(angle);
 
   R <<=
       1, 0, 0, 0,
@@ -95,12 +108,10 @@ Transformer::matrix Transformer::getOxRotateMatrix(double angle) {
   return R;
 }
 
-Transformer::matrix Transformer::getOyRotateMatrix(double angle) {
+Transformer::matrix Transformer::OyRotationMatrix(double angle) {
   matrix R(4, 4);
-
-  double rad_angle = angle * M_PI / 180;
-  double c = std::cos(rad_angle);
-  double s = std::sin(rad_angle);
+  double c = std::cos(angle);
+  double s = std::sin(angle);
 
   R <<=
       c, 0, s, 0,
@@ -111,12 +122,10 @@ Transformer::matrix Transformer::getOyRotateMatrix(double angle) {
   return R;
 }
 
-Transformer::matrix Transformer::getOzRotateMatrix(double angle) {
+Transformer::matrix Transformer::OzRotationMatrix(double angle) {
   matrix R(4, 4);
-
-  double rad_angle = angle * M_PI / 180;
-  double c = std::cos(rad_angle);
-  double s = std::sin(rad_angle);
+  double c = std::cos(angle);
+  double s = std::sin(angle);
 
   R <<=
       c,-s, 0, 0,
@@ -125,4 +134,11 @@ Transformer::matrix Transformer::getOzRotateMatrix(double angle) {
       0, 0, 0, 1;
 
   return R;
+}
+Transformer::vector Transformer::cross_prod(const Transformer::vector& first, const Transformer::vector& second) {
+  vector res(3);
+  res <<= first[2] * second[1] - first[1] * second[2],
+          first[0] * second[2] - first[2] * second[0],
+          first[1] * second[0] - first[0] * second[1];
+  return res;
 }
