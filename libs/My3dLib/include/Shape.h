@@ -22,13 +22,14 @@ class Shape {
     VertexInfo verInfo[3] = {0};
   };
 
-  void setPosition(const vector& pos, Coords coord);
-  void translate(const vector& vec, Coords coord);
-  void rotate(double angle, Transformer::Axes axis, Coords coord);
-  void scale(double x, double y, double z, Coords coord);
+  [[nodiscard]] matrix M() const;
 
-  matrix M() const;
-
+  void SetPosition(double x, double y, double z, Coords coord);
+  void Translate(double delta_x, double delta_y, double delta_z, Coords coord);
+  void SetRotate(double aroundOx, double aroundOy, double aroundOz, Coords coord);
+  void Rotate(double aroundOx, double aroundOy, double aroundOz, Coords coord);
+  void SetScale(double x, double y, double z, Coords coord);
+  void Scale(double x, double y, double z, Coords coord);
 
   std::vector<vector> vertices;
   std::vector<vector> normals;
