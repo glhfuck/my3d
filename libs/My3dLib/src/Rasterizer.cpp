@@ -33,7 +33,7 @@ void Rasterizer::drawShape(const Shape& shape,
 }
 
 void Rasterizer::drawShapeVertices(const Shape& shape, const Camera& camera, const Lens& lens) {
-  ublas::matrix<double> MV = ublas::prod(camera.V, shape.M());
+  ublas::matrix<double> MV = ublas::prod(camera.V(), shape.M());
   ublas::matrix<double> MVP = ublas::prod(lens.P, MV);
 
   for (auto& vertex : shape.vertices) {
@@ -50,7 +50,7 @@ void Rasterizer::drawShapeVertices(const Shape& shape, const Camera& camera, con
 }
 
 void Rasterizer::drawShapeEdges(const Shape& shape, const Camera& camera, const Lens& lens) {
-  ublas::matrix<double> MV = ublas::prod(camera.V, shape.M());
+  ublas::matrix<double> MV = ublas::prod(camera.V(), shape.M());
   ublas::matrix<double> MVP = ublas::prod(lens.P, MV);
 
   for (auto& facet : shape.facets) {
@@ -82,11 +82,10 @@ void Rasterizer::drawShapeEdges(const Shape& shape, const Camera& camera, const 
 }
 
 void Rasterizer::drawShapeFacets(const Shape& shape, const Camera& camera, const Lens& lens) {
-  ublas::matrix<double> MV = ublas::prod(camera.V, shape.M());
+  ublas::matrix<double> MV = ublas::prod(camera.V(), shape.M());
   ublas::matrix<double> MVP = ublas::prod(lens.P, MV);
 
-  std::vector<ublas::vector<double>> v_res;
-  v_res.reserve(shape.vertices.size());
+  std::cout << camera.V() << std::endl;
 
   ublas::vector<double> light(4);
   light <<= 1, 1, 1, 0;
@@ -109,17 +108,17 @@ void Rasterizer::drawShapeFacets(const Shape& shape, const Camera& camera, const
 
     // Backface culling
     if ((res1[0] - res0[0]) * (res2[2] - res0[2]) -
-        (res1[2] - res0[2]) * (res2[0] - res0[0]) > 0) {
+        (res1[2] - res0[2]) * (res2[0] - res0[0]) < 0) {
       continue;
     }
 
-    int x0 = (-res0[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
+    int x0 = (res0[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
     int y0 = (-res0[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
     double depth0 = res0[1];
-    int x1 = (-res1[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
+    int x1 = (res1[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
     int y1 = (-res1[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
     double depth1 = res1[1];
-    int x2 = (-res2[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
+    int x2 = (res2[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
     int y2 = (-res2[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
     double depth2 = res2[1];
 
@@ -155,7 +154,7 @@ void Rasterizer::drawPoint(const Point& p) {
   }
 
   // Depth test
-  if (depth_buff_.getBuffer()[p.y][p.x] <= p.depth) {
+  if (depth_buff_.getBuffer()[p.y][p.x] < p.depth) {
     return;
   }
 
