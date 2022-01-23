@@ -23,6 +23,9 @@ class Camera {
 
   Camera(const vector& position, double yaw, double pitch, double roll);
 
+  void Rotate(double yaw, double pitch, double roll);
+  void Move(double right, double forward, double up);
+
  public:
   mutable Transformer transformer_;
   double yaw = 0;
