@@ -26,6 +26,8 @@ class Camera {
   void Rotate(double yaw, double pitch, double roll);
   void Move(double right, double forward, double up);
 
+  void GetParam();
+
  public:
   mutable Transformer transformer_;
   double yaw = 0;
