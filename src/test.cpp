@@ -47,28 +47,36 @@ int windowCreate () {
   Rasterizer raster(win_w, win_h);
 
   Shape ghost = Obj_loader::getShape("../pantasma02.obj");
-  //Shape ghost = Obj_loader::getShape("../untitled-scene.obj");
+  //Shape static_axes = Obj_loader::getShape("../untitled-scene.obj");
+  Shape static_axes = Obj_loader::getShape("../axes.obj");
+  //Shape dynamic_axes = Obj_loader::getShape("../axes.obj");
 
   ublas::vector<double> cam_pos(3);
-  //cam_pos <<= 5, 5, 5;
-  cam_pos <<= 20, 20, 20;
-  //cam_pos <<= 45, 45, 45;
+  cam_pos <<= 5, -5, 5;
   Camera camera(cam_pos);
 
-  Lens screen(80, (double) win_w / win_h, 18, 30);
+  double FOV = 120;
+  Lens lens(FOV, (double) win_w / win_h, 1, 30);
 
-  Transformer::Axes axis = Transformer::Axes::Ox;
   Shape::Coords coord = Shape::Coords::Global;
+  int direction = 1;
 
   bool quit = false;
   while (!quit) {
     auto start = std::chrono::high_resolution_clock::now();
     SDL_Event e;
 
-    ublas::vector<double> translate_to(3);
-    translate_to <<= 0, 0, 0;
-    double speed = 0.100;
-    int sign = 0;
+    double trans_speed = 0.100;
+    double rot_speed = 0.02;
+
+    double x_trans = 0;
+    double y_trans = 0;
+    double z_trans = 0;
+
+    double x_rot = 0;
+    double y_rot = 0;
+    double z_rot = 0;
+
 
     while (SDL_PollEvent(&e)) {
       if (e.type == SDL_QUIT) {
@@ -76,38 +84,44 @@ int windowCreate () {
       }
 
       if (e.type == SDL_KEYDOWN) {
-        if (e.key.keysym.sym == SDLK_w) {
-          translate_to[0] += speed;
-        }
-        if (e.key.keysym.sym == SDLK_s) {
-          translate_to[0] -= speed;
-        }
         if (e.key.keysym.sym == SDLK_a) {
-          translate_to[1] -= speed;
+          x_trans -= trans_speed;
         }
         if (e.key.keysym.sym == SDLK_d) {
-          translate_to[1] += speed;
+          x_trans += trans_speed;
+        }
+        if (e.key.keysym.sym == SDLK_s) {
+          y_trans -= trans_speed;
+        }
+        if (e.key.keysym.sym == SDLK_w) {
+          y_trans += trans_speed;
         }
         if (e.key.keysym.sym == SDLK_TAB) {
-          translate_to[2] -= speed;
+          z_trans -= trans_speed;
         }
         if (e.key.keysym.sym == SDLK_SPACE) {
-          translate_to[2] += speed;
+          z_trans += trans_speed;
+        }
+        if (e.key.keysym.sym == SDLK_u) {
+          --FOV;
+        }
+        if (e.key.keysym.sym == SDLK_i) {
+          ++FOV;
         }
         if (e.key.keysym.sym == SDLK_q) {
-          sign -= 1;
+          direction = 1;
         }
         if (e.key.keysym.sym == SDLK_e) {
-          sign += 1;
+          direction = -1;
         }
         if (e.key.keysym.sym == SDLK_z) {
-          axis = Transformer::Axes::Ox;
+          x_rot += rot_speed * direction;
         }
         if (e.key.keysym.sym == SDLK_x) {
-          axis = Transformer::Axes::Oy;
+          y_rot += rot_speed * direction;
         }
         if (e.key.keysym.sym == SDLK_c) {
-          axis = Transformer::Axes::Oz;
+          z_rot += rot_speed * direction;
         }
         if (e.key.keysym.sym == SDLK_g) {
           coord = Shape::Coords::Global;
@@ -135,22 +149,34 @@ int windowCreate () {
       if (e.type == SDL_MOUSEBUTTONDOWN) {
         quit = true;
       }
+
+      lens.SetFOV(FOV);
+
+      camera.Move(x_trans, y_trans, z_trans);
+      camera.Rotate(z_rot, x_rot, y_rot);
+      camera.GetParam();
+//      dynamic_axes.Translate(x_trans, y_trans, z_trans, coord);
+//      dynamic_axes.Rotate(x_rot, y_rot, z_rot, coord);
+
+      raster.clear();
+
+      raster.drawShape(static_axes, camera, lens);
+      raster.drawShape(ghost, camera, lens);
+
+      auto end = std::chrono::high_resolution_clock::now();
+      std::chrono::duration<float, std::milli> duration = end - start;
+      std::cout << duration.count() << std::endl;
+
+      SDL_UpdateTexture(texture , NULL, raster.getFrameBuffer(), win_w * sizeof (uint32_t));
+      SDL_RenderCopy(renderer, texture , NULL, NULL);
+      SDL_RenderPresent(renderer);
+
     }
 
-    ghost.translate(translate_to, coord);
-    ghost.rotate(sign * 0.5, axis, coord);
+    //static_axes.Translate(translate_to, coord);
+    //camera.
+   // static_axes.Rotate(sign * 0.5, axis, coord);
 
-    raster.clear();
-
-    raster.drawShape(ghost, camera, screen);
-
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<float, std::milli> duration = end - start;
-    std::cout << duration.count() << std::endl;
-
-    SDL_UpdateTexture(texture , NULL, raster.getFrameBuffer(), win_w * sizeof (uint32_t));
-    SDL_RenderCopy(renderer, texture , NULL, NULL);
-    SDL_RenderPresent(renderer);
   }
 
   SDL_DestroyWindow(window);
