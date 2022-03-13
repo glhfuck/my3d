@@ -34,7 +34,7 @@ void Rasterizer::drawShape(const Shape& shape,
 
 void Rasterizer::drawShapeVertices(const Shape& shape, const Camera& camera, const Lens& lens) {
   ublas::matrix<double> MV = ublas::prod(camera.V(), shape.M());
-  ublas::matrix<double> MVP = ublas::prod(lens.P, MV);
+  ublas::matrix<double> MVP = ublas::prod(lens.P(), MV);
 
   for (auto& vertex : shape.vertices) {
     ublas::vector<double> res = ublas::prod(MVP, vertex);
@@ -42,16 +42,21 @@ void Rasterizer::drawShapeVertices(const Shape& shape, const Camera& camera, con
       res[i] /= res[3];
     }
 
-    int x = (-res[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
+    if (res[0] < -1 || res[0] > 1 ||
+        res[2] < -1 || res[2] > 1) {
+      continue;
+    }
+
+    int x = (res[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
     int y = (-res[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
 
-    drawPoint(Point{x, y, -1.0, Color::White});
+    drawPoint(Point{x, y, res[1], Color::White});
   }
 }
 
 void Rasterizer::drawShapeEdges(const Shape& shape, const Camera& camera, const Lens& lens) {
   ublas::matrix<double> MV = ublas::prod(camera.V(), shape.M());
-  ublas::matrix<double> MVP = ublas::prod(lens.P, MV);
+  ublas::matrix<double> MVP = ublas::prod(lens.P(), MV);
 
   for (auto& facet : shape.facets) {
     ublas::vector v0 = shape.vertices[facet.verInfo[0].v_idx];
@@ -68,24 +73,40 @@ void Rasterizer::drawShapeEdges(const Shape& shape, const Camera& camera, const 
       res2[i] /= res2[3];
     }
 
-    int x0 = (-res0[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y0 = (-res0[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
-    int x1 = (-res1[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y1 = (-res1[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
-    int x2 = (-res2[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y2 = (-res2[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    if (res0[0] < -1 || res0[0] > 1 ||
+        res0[2] < -1 || res0[2] > 1) {
+      continue;
+    }
 
-    drawLine(Point{x0, y0}, Point{x1, y1}, Color::White);
-    drawLine(Point{x1, y1}, Point{x2, y2}, Color::White);
-    drawLine(Point{x2, y2}, Point{x0, y0}, Color::White);
+    if (res1[0] < -1 || res1[0] > 1 ||
+        res1[2] < -1 || res1[2] > 1) {
+      continue;
+    }
+
+    if (res2[0] < -1 || res2[0] > 1 ||
+        res2[2] < -1 || res2[2] > 1) {
+      continue;
+    }
+
+    int x0 = (res0[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
+    int y0 = (-res0[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    double depth0 = res0[1];
+    int x1 = (res1[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
+    int y1 = (-res1[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    double depth1 = res1[1];
+    int x2 = (res2[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
+    int y2 = (-res2[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    double depth2 = res2[1];
+
+    drawLine(Point{x0, y0, depth0}, Point{x1, y1, depth1}, Color::White);
+    drawLine(Point{x1, y1, depth1}, Point{x2, y2, depth2}, Color::White);
+    drawLine(Point{x2, y2, depth2}, Point{x0, y0, depth0}, Color::White);
   }
 }
 
 void Rasterizer::drawShapeFacets(const Shape& shape, const Camera& camera, const Lens& lens) {
   ublas::matrix<double> MV = ublas::prod(camera.V(), shape.M());
-  ublas::matrix<double> MVP = ublas::prod(lens.P, MV);
-
-  std::cout << camera.V() << std::endl;
+  ublas::matrix<double> MVP = ublas::prod(lens.P(), MV);
 
   ublas::vector<double> light(4);
   light <<= 1, 1, 1, 0;
@@ -104,6 +125,21 @@ void Rasterizer::drawShapeFacets(const Shape& shape, const Camera& camera, const
       res0[i] /= res0[3];
       res1[i] /= res1[3];
       res2[i] /= res2[3];
+    }
+
+    if (res0[0] < -1 || res0[0] > 1 ||
+        res0[2] < -1 || res0[2] > 1) {
+      continue;
+    }
+
+    if (res1[0] < -1 || res1[0] > 1 ||
+        res1[2] < -1 || res1[2] > 1) {
+      continue;
+    }
+
+    if (res2[0] < -1 || res2[0] > 1 ||
+        res2[2] < -1 || res2[2] > 1) {
+      continue;
     }
 
     // Backface culling
