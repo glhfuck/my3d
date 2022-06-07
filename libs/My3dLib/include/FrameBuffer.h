@@ -8,8 +8,8 @@ class FrameBuffer {
  public:
   FrameBuffer(size_t rows, size_t columns);
 
-  T** getBuffer();
-  T* getData();
+  T** GetBuffer();
+  T* GetData();
 
   ~FrameBuffer();
 
@@ -38,12 +38,12 @@ FrameBuffer<T>::FrameBuffer(size_t rows, size_t columns) :
 }
 
 template <typename T>
-T** FrameBuffer<T>::getBuffer() {
+T** FrameBuffer<T>::GetBuffer() {
   return buffer_;
 }
 
 template <typename T>
-T* FrameBuffer<T>::getData() {
+T* FrameBuffer<T>::GetData() {
   return data_;
 }
 

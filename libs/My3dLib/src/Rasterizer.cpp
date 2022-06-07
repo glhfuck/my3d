@@ -11,7 +11,7 @@ Rasterizer::Rasterizer(size_t width, size_t height):
 }
 
 uint32_t* Rasterizer::GetFrameBuffer() {
-  return frame_buff_.getData();
+  return frame_buff_.GetData();
 }
 
 void Rasterizer::Clear() {
@@ -190,18 +190,18 @@ void Rasterizer::DrawPixel(const Pixel& p) {
   }
 
   // Depth test
-  if (depth_buff_.getBuffer()[p.y][p.x] < p.depth) {
+  if (depth_buff_.GetBuffer()[p.y][p.x] < p.depth) {
     return;
   }
 
-  depth_buff_.getBuffer()[p.y][p.x] = p.depth;
+  depth_buff_.GetBuffer()[p.y][p.x] = p.depth;
 
   if (filling_mode_ == FillingMode::Colored) {
-    frame_buff_.getBuffer()[p.y][p.x] = static_cast<uint32_t>(p.color);
+    frame_buff_.GetBuffer()[p.y][p.x] = static_cast<uint32_t>(p.color);
   } else if (filling_mode_ == FillingMode::Depth) {
     uint8_t intensity = 255.0 * (p.depth + 1) / 2;
     Color color(intensity, intensity, intensity);
-    frame_buff_.getBuffer()[p.y][p.x] = static_cast<uint32_t>(color);
+    frame_buff_.GetBuffer()[p.y][p.x] = static_cast<uint32_t>(color);
   } else {
     throw std::invalid_argument("Invalid filling mode.");
   }
@@ -212,7 +212,7 @@ void Rasterizer::DrawLine(const Pixel& p1, const Pixel& p2, const Color& color) 
 }
 
 void Rasterizer::SetPixelToTriangleOutline(const Pixel& p) {
-  auto** to = triangular_outline_.getBuffer();
+  auto** to = triangular_outline_.GetBuffer();
 
   if (p.y < 0 || p.y > frame_buff_.ROWS_COUNT - 1) {
     return;
@@ -290,7 +290,7 @@ void Rasterizer::DrawTriangle(const Pixel& p1, const Pixel& p2, const Pixel& p3,
   SetEdgeToTriangleOutline(p2, p3, color);
   SetEdgeToTriangleOutline(p3, p1, color);
 
-  auto** to = triangular_outline_.getBuffer();
+  auto** to = triangular_outline_.GetBuffer();
   for (int y = 0; y < triangular_outline_.COLUMNS_COUNT; ++y) {
     if (to[0][y].x <= to[1][y].x) {
       DrawLine(to[0][y], to[1][y], color);
@@ -301,22 +301,22 @@ void Rasterizer::DrawTriangle(const Pixel& p1, const Pixel& p2, const Pixel& p3,
 void Rasterizer::ClearDepthBuffer() {
   for (size_t row = 0; row < depth_buff_.ROWS_COUNT; ++row) {
     for (size_t column = 0; column < depth_buff_.COLUMNS_COUNT; ++column) {
-      depth_buff_.getBuffer()[row][column] = 1.0;
+      depth_buff_.GetBuffer()[row][column] = 1.0;
     }
   }
 }
 
 void Rasterizer::ClearFrameBuffer() {
-  memset(frame_buff_.getData(), 0, frame_buff_.DATA_SIZE);
+  memset(frame_buff_.GetData(), 0, frame_buff_.DATA_SIZE);
 }
 
 void Rasterizer::ClearTriangularOutline() {
   for (int i = 0; i < triangular_outline_.COLUMNS_COUNT; ++i) {
-    triangular_outline_.getBuffer()[0][i] = Pixel{INT32_MAX, i};
+    triangular_outline_.GetBuffer()[0][i] = Pixel{INT32_MAX, i};
   }
 
   for (int i = 0; i < triangular_outline_.COLUMNS_COUNT; ++i) {
-    triangular_outline_.getBuffer()[1][i] = Pixel{0, i};
+    triangular_outline_.GetBuffer()[1][i] = Pixel{0, i};
   }
 }
 

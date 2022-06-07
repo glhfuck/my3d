@@ -2,16 +2,16 @@
 #include <cmath>
 
 Lens::Lens(double fov, double ratio, double near, double far) :
-    fov(fov * M_PI / 180), ratio(ratio), near(near), far(far) {
+    fov_(fov * M_PI / 180), ratio_(ratio), near_(near), far_(far) {
 }
 
 matrix Lens::P() const {
   matrix P(4, 4);
 
-  double w = std::tan(fov / 2);
-  double h = w / ratio;
-  double a = far / (far - near);
-  double b = -far * near / (far - near);
+  double w = std::tan(fov_ / 2);
+  double h = w / ratio_;
+  double a = far_ / (far_ - near_);
+  double b = -far_ * near_ / (far_ - near_);
 
   P <<=
       1/w, 0, 0  , 0,
@@ -22,5 +22,5 @@ matrix Lens::P() const {
   return P;
 }
 void Lens::SetFOV(double new_fov) {
-  fov = new_fov * M_PI / 180;
+  fov_ = new_fov * M_PI / 180;
 }

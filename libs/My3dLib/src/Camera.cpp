@@ -22,21 +22,21 @@ Camera::Camera(const vector& position,
   up /= ublas::norm_2(up); // Don't need to normalize as cross product of two unit vectors, but just to be sure.
 
   if (forward[2] == 1) {
-    pitch = M_PI_2;
-    roll = 0;
-    yaw = -atan2(up[0], right[0]);
+    pitch_ = M_PI_2;
+    roll_ = 0;
+    yaw_ = -atan2(up[0], right[0]);
   } else if (forward[2] == -1) {
-    pitch = -M_PI_2;
-    roll = 0;
-    yaw = atan2(up[0], right[0]);
+    pitch_ = -M_PI_2;
+    roll_ = 0;
+    yaw_ = atan2(up[0], right[0]);
   } else {
-    pitch = asin(forward[2]);
-    yaw = atan2(-forward[0] / cos(pitch), forward[1] / cos(pitch));
-    roll = atan2(-right[2] / cos(pitch), up[2] / cos(pitch));
+    pitch_ = asin(forward[2]);
+    yaw_ = atan2(-forward[0] / cos(pitch_), forward[1] / cos(pitch_));
+    roll_ = atan2(-right[2] / cos(pitch_), up[2] / cos(pitch_));
   }
 
   transformer_.SetPosition(position[0], position[1], position[2]);
-  transformer_.SetRotate(pitch, roll, yaw);
+  transformer_.SetRotate(pitch_, roll_, yaw_);
 }
 
 Camera::matrix Camera::V() const {

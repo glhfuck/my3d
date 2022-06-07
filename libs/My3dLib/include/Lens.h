@@ -22,10 +22,10 @@ class Lens {
   [[nodiscard]] matrix P() const;
 
  private:
-  double fov = 0;
-  double ratio = 0;
-  double near = 0;
-  double far = 0;
+  double fov_ = 0;
+  double ratio_ = 0;
+  double near_ = 0;
+  double far_ = 0;
 };
 
 #endif //MY3D_LIBS_MY3DLIB_SRC_LENS_H_

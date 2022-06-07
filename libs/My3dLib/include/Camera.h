@@ -30,9 +30,9 @@ class Camera {
 
  private:
   mutable Transformer transformer_;
-  double yaw = 0;
-  double pitch = 0;
-  double roll = 0;
+  double yaw_ = 0;
+  double pitch_ = 0;
+  double roll_ = 0;
 };
 
 #endif //MY3D_LIBS_MY3DLIB_SRC_CAMERA_H_
