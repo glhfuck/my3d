@@ -1,38 +1,39 @@
 #include "../include/Rasterizer.h"
 #include <cmath>
+#include <cstring>
 
 Rasterizer::Rasterizer(size_t width, size_t height):
     frame_buff_(height, width),
     depth_buff_(height, width),
     triangular_outline_(2, height) {
-  clearFrameBuffer();
-  clearDepthBuffer();
+  ClearFrameBuffer();
+  ClearDepthBuffer();
 }
 
-uint32_t* Rasterizer::getFrameBuffer() {
+uint32_t* Rasterizer::GetFrameBuffer() {
   return frame_buff_.getData();
 }
 
-void Rasterizer::clear() {
-  clearDepthBuffer();
-  clearFrameBuffer();
+void Rasterizer::Clear() {
+  ClearDepthBuffer();
+  ClearFrameBuffer();
 }
 
-void Rasterizer::drawShape(const Shape& shape,
+void Rasterizer::DrawShape(const Shape& shape,
                            const Camera& camera,
                            const Lens& lens) {
   if (rendering_mode_ == RenderingMode::Vertices) {
-    drawShapeVertices(shape, camera, lens);
+    DrawShapeVertices(shape, camera, lens);
   } else if (rendering_mode_ == RenderingMode::Edges) {
-    drawShapeEdges(shape, camera, lens);
+    DrawShapeEdges(shape, camera, lens);
   } else if (rendering_mode_ == RenderingMode::Facets) {
-    drawShapeFacets(shape, camera, lens);
+    DrawShapeFacets(shape, camera, lens);
   } else {
     throw std::invalid_argument("Invalid rendering mode.");
   }
 }
 
-void Rasterizer::drawShapeVertices(const Shape& shape, const Camera& camera, const Lens& lens) {
+void Rasterizer::DrawShapeVertices(const Shape& shape, const Camera& camera, const Lens& lens) {
   ublas::matrix<double> MV = ublas::prod(camera.V(), shape.M());
   ublas::matrix<double> MVP = ublas::prod(lens.P(), MV);
 
@@ -50,11 +51,11 @@ void Rasterizer::drawShapeVertices(const Shape& shape, const Camera& camera, con
     int x = (res[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
     int y = (-res[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
 
-    drawPoint(Point{x, y, res[1], Color::White});
+    DrawPixel(Pixel{x, y, res[1], Color::White});
   }
 }
 
-void Rasterizer::drawShapeEdges(const Shape& shape, const Camera& camera, const Lens& lens) {
+void Rasterizer::DrawShapeEdges(const Shape& shape, const Camera& camera, const Lens& lens) {
   ublas::matrix<double> MV = ublas::prod(camera.V(), shape.M());
   ublas::matrix<double> MVP = ublas::prod(lens.P(), MV);
 
@@ -98,14 +99,15 @@ void Rasterizer::drawShapeEdges(const Shape& shape, const Camera& camera, const 
     int y2 = (-res2[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
     double depth2 = res2[1];
 
-    drawLine(Point{x0, y0, depth0}, Point{x1, y1, depth1}, Color::White);
-    drawLine(Point{x1, y1, depth1}, Point{x2, y2, depth2}, Color::White);
-    drawLine(Point{x2, y2, depth2}, Point{x0, y0, depth0}, Color::White);
+    DrawLine(Pixel{x0, y0, depth0}, Pixel{x1, y1, depth1}, Color::White);
+    DrawLine(Pixel{x1, y1, depth1}, Pixel{x2, y2, depth2}, Color::White);
+    DrawLine(Pixel{x2, y2, depth2}, Pixel{x0, y0, depth0}, Color::White);
   }
 }
 
-void Rasterizer::drawShapeFacets(const Shape& shape, const Camera& camera, const Lens& lens) {
-  ublas::matrix<double> MV = ublas::prod(camera.V(), shape.M());
+void Rasterizer::DrawShapeFacets(const Shape& shape, const Camera& camera, const Lens& lens) {
+  ublas::matrix<double> M = shape.M();
+  ublas::matrix<double> MV = ublas::prod(camera.V(), M);
   ublas::matrix<double> MVP = ublas::prod(lens.P(), MV);
 
   ublas::vector<double> light(4);
@@ -164,22 +166,20 @@ void Rasterizer::drawShapeFacets(const Shape& shape, const Camera& camera, const
         shape.normals[facet.verInfo[1].vn_idx] +
         shape.normals[facet.verInfo[2].vn_idx];
 
-    ublas::vector<double> res_normal = ublas::prod(MV, facet_normal);
+    ublas::vector<double> res_normal = ublas::prod(M, facet_normal);
     res_normal /= ublas::norm_2(res_normal);
 
     double prod = ublas::inner_prod(light, res_normal);
-    Color res_color(155 + 100 * prod,
-                    155 + 100 * prod,
-                    155 + 100 * prod);
+    Color res_color(155 + 100 * prod, 155 + 100 * prod, 155 + 100 * prod);
 
-    drawTriangle(Point{x0, y0, depth0},
-                 Point{x1, y1, depth1},
-                 Point{x2, y2, depth2},
+    DrawTriangle(Pixel{x0, y0, depth0},
+                 Pixel{x1, y1, depth1},
+                 Pixel{x2, y2, depth2},
                  res_color);
   }
 }
 
-void Rasterizer::drawPoint(const Point& p) {
+void Rasterizer::DrawPixel(const Pixel& p) {
   if (p.x < 0 ||
       p.y < 0 ||
       p.x > frame_buff_.COLUMNS_COUNT - 1 ||
@@ -207,11 +207,11 @@ void Rasterizer::drawPoint(const Point& p) {
   }
 }
 
-void Rasterizer::drawLine(const Point& p1, const Point& p2, const Color& color) {
-  drawLineImpl(p1, p2, color, false);
+void Rasterizer::DrawLine(const Pixel& p1, const Pixel& p2, const Color& color) {
+  DrawLineImpl(p1, p2, color, false);
 }
 
-void Rasterizer::setPointToTriangleOutline(const Point& p) {
+void Rasterizer::SetPixelToTriangleOutline(const Pixel& p) {
   auto** to = triangular_outline_.getBuffer();
 
   if (p.y < 0 || p.y > frame_buff_.ROWS_COUNT - 1) {
@@ -219,19 +219,19 @@ void Rasterizer::setPointToTriangleOutline(const Point& p) {
   }
 
   if (p.x < to[0][p.y].x) {
-    to[0][p.y] = Point{std::max(p.x, 0), p.y, p.depth, p.color};
+    to[0][p.y] = Pixel{std::max(p.x, 0), p.y, p.depth, p.color};
   }
 
   if (p.x > to[1][p.y].x) {
-    to[1][p.y] = Point{std::min(p.x, static_cast<int>(frame_buff_.COLUMNS_COUNT) - 1), p.y, p.depth, p.color};
+    to[1][p.y] = Pixel{std::min(p.x, static_cast<int>(frame_buff_.COLUMNS_COUNT) - 1), p.y, p.depth, p.color};
   }
 }
 
-void Rasterizer::setEdgeToTriangleOutline(const Point& p1, const Point& p2, const Color& color) {
-  drawLineImpl(p1, p2, color, true);
+void Rasterizer::SetEdgeToTriangleOutline(const Pixel& p1, const Pixel& p2, const Color& color) {
+  DrawLineImpl(p1, p2, color, true);
 }
 
-void Rasterizer::drawLineImpl(const Point& p1, const Point& p2, const Color& color, bool triangle_outline_mode) {
+void Rasterizer::DrawLineImpl(const Pixel& p1, const Pixel& p2, const Color& color, bool triangle_outline_mode) {
   int x = p1.x;
   int y = p1.y;
   int dx = abs(p2.x - p1.x);
@@ -266,9 +266,9 @@ void Rasterizer::drawLineImpl(const Point& p1, const Point& p2, const Color& col
     }
 
     if (triangle_outline_mode) {
-      setPointToTriangleOutline(Point{cur_x, cur_y, depth, color});
+      SetPixelToTriangleOutline(Pixel{cur_x, cur_y, depth, color});
     } else {
-      drawPoint(Point{cur_x, cur_y, depth, color});
+      DrawPixel(Pixel{cur_x, cur_y, depth, color});
     }
 
     if (deviation > 0) {
@@ -283,22 +283,22 @@ void Rasterizer::drawLineImpl(const Point& p1, const Point& p2, const Color& col
   }
 }
 
-void Rasterizer::drawTriangle(const Point& p1, const Point& p2, const Point& p3, const Color& color) {
-  clearTriangularOutline();
+void Rasterizer::DrawTriangle(const Pixel& p1, const Pixel& p2, const Pixel& p3, const Color& color) {
+  ClearTriangularOutline();
 
-  setEdgeToTriangleOutline(p1, p2, color);
-  setEdgeToTriangleOutline(p2, p3, color);
-  setEdgeToTriangleOutline(p3, p1, color);
+  SetEdgeToTriangleOutline(p1, p2, color);
+  SetEdgeToTriangleOutline(p2, p3, color);
+  SetEdgeToTriangleOutline(p3, p1, color);
 
   auto** to = triangular_outline_.getBuffer();
   for (int y = 0; y < triangular_outline_.COLUMNS_COUNT; ++y) {
     if (to[0][y].x <= to[1][y].x) {
-      drawLine(to[0][y], to[1][y], color);
+      DrawLine(to[0][y], to[1][y], color);
     }
   }
 }
 
-void Rasterizer::clearDepthBuffer() {
+void Rasterizer::ClearDepthBuffer() {
   for (size_t row = 0; row < depth_buff_.ROWS_COUNT; ++row) {
     for (size_t column = 0; column < depth_buff_.COLUMNS_COUNT; ++column) {
       depth_buff_.getBuffer()[row][column] = 1.0;
@@ -306,23 +306,23 @@ void Rasterizer::clearDepthBuffer() {
   }
 }
 
-void Rasterizer::clearFrameBuffer() {
-  memset(frame_buff_.getData(),0, frame_buff_.DATA_SIZE);
+void Rasterizer::ClearFrameBuffer() {
+  memset(frame_buff_.getData(), 0, frame_buff_.DATA_SIZE);
 }
 
-void Rasterizer::clearTriangularOutline() {
+void Rasterizer::ClearTriangularOutline() {
   for (int i = 0; i < triangular_outline_.COLUMNS_COUNT; ++i) {
-    triangular_outline_.getBuffer()[0][i] = Point{INT32_MAX, i};
+    triangular_outline_.getBuffer()[0][i] = Pixel{INT32_MAX, i};
   }
 
   for (int i = 0; i < triangular_outline_.COLUMNS_COUNT; ++i) {
-    triangular_outline_.getBuffer()[1][i] = Point{0, i};
+    triangular_outline_.getBuffer()[1][i] = Pixel{0, i};
   }
 }
 
-void Rasterizer::setRenderingMode(const Rasterizer::RenderingMode& rm) {
+void Rasterizer::SetRenderingMode(const Rasterizer::RenderingMode& rm) {
   rendering_mode_ = rm;
 }
-void Rasterizer::setFillingMode(const Rasterizer::FillingMode& fm) {
+void Rasterizer::SetFillingMode(const Rasterizer::FillingMode& fm) {
   filling_mode_ = fm;
 }

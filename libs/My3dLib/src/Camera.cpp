@@ -40,7 +40,6 @@ Camera::Camera(const vector& position,
 }
 
 Camera::matrix Camera::V() const {
-  //std::cout << "yaw:" << yaw << std::endl << "pitch:" << pitch << std::endl << "roll:" << roll << std::endl;
   matrix reversed_rotation = ublas::trans(transformer_.getRotationMatrix());
   matrix reversed_translation = transformer_.getTranslationMatrix();
   reversed_translation(0, 3) *= -1;
@@ -63,14 +62,5 @@ void Camera::Move(double right, double forward, double up) {
 }
 void Camera::Rotate(double yaw, double pitch, double roll) {
   transformer_.Rotate(pitch, roll, yaw);
-}
-void Camera::GetParam() {
-  std::cout
-      << "yaw: " << transformer_.z_angle_ * 180 / M_PI << '\n'
-      << "pitch: " << transformer_.x_angle_ * 180 / M_PI << '\n'
-      << "roll: " << transformer_.y_angle_ * 180 / M_PI << '\n'
-      << "x: " << transformer_.x_position_ << '\n'
-      << "y: " << transformer_.y_position_ << '\n'
-      << "z: " << transformer_.z_position_ << '\n' << '\n';
 }
 

@@ -22,6 +22,7 @@ class FrameBuffer {
   T* data_;
 };
 
+
 template <typename T>
 FrameBuffer<T>::FrameBuffer(size_t rows, size_t columns) :
     ROWS_COUNT(rows),

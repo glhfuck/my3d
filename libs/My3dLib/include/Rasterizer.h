@@ -13,7 +13,7 @@
 #include "../include/Camera.h"
 #include "../include/Lens.h"
 #include "../include/Color.h"
-#include "../include/Point.h"
+#include "../include/Pixel.h"
 
 using namespace boost::numeric;
 
@@ -32,36 +32,36 @@ class Rasterizer {
 
   Rasterizer(size_t width, size_t height);
 
-  uint32_t* getFrameBuffer();
-  void drawShape(const Shape& shape, const Camera& camera, const Lens& lens);
-  void setRenderingMode(const RenderingMode& rm);
-  void setFillingMode(const FillingMode& fm);
-  void clear();
+  uint32_t* GetFrameBuffer();
+  void DrawShape(const Shape& shape, const Camera& camera, const Lens& lens);
+  void SetRenderingMode(const RenderingMode& rm);
+  void SetFillingMode(const FillingMode& fm);
+  void Clear();
 
  private:
   FrameBuffer<uint32_t> frame_buff_;
   FrameBuffer<double> depth_buff_;
-  FrameBuffer<Point> triangular_outline_;
+  FrameBuffer<Pixel> triangular_outline_;
 
   RenderingMode rendering_mode_ = Facets;
   FillingMode filling_mode_ = Colored;
 
-  void drawShapeVertices(const Shape& shape, const Camera& camera, const Lens& lens);
-  void drawShapeEdges(const Shape& shape, const Camera& camera, const Lens& lens);
-  void drawShapeFacets(const Shape& shape, const Camera& camera, const Lens& lens);
+  void DrawShapeVertices(const Shape& shape, const Camera& camera, const Lens& lens);
+  void DrawShapeEdges(const Shape& shape, const Camera& camera, const Lens& lens);
+  void DrawShapeFacets(const Shape& shape, const Camera& camera, const Lens& lens);
 
-  void drawPoint(const Point& p);
-  void drawLine(const Point& p1, const Point& p2, const Color& color);
-  void drawTriangle(const Point& p1, const Point& p2, const Point& p3, const Color& color);
+  void DrawPixel(const Pixel& p);
+  void DrawLine(const Pixel& p1, const Pixel& p2, const Color& color);
+  void DrawTriangle(const Pixel& p1, const Pixel& p2, const Pixel& p3, const Color& color);
 
-  void setPointToTriangleOutline(const Point& p);
-  void setEdgeToTriangleOutline(const Point& p1, const Point& p2, const Color& color);
+  void SetPixelToTriangleOutline(const Pixel& p);
+  void SetEdgeToTriangleOutline(const Pixel& p1, const Pixel& p2, const Color& color);
 
-  void drawLineImpl(const Point& p1, const Point& p2, const Color& color, bool triangle_outline_mode);
+  void DrawLineImpl(const Pixel& p1, const Pixel& p2, const Color& color, bool triangle_outline_mode);
 
-  void clearFrameBuffer();
-  void clearDepthBuffer();
-  void clearTriangularOutline();
+  void ClearFrameBuffer();
+  void ClearDepthBuffer();
+  void ClearTriangularOutline();
 };
 
 #endif //MY3D_LIBS_MY3DLIB_SRC_RASTERIZER_H_

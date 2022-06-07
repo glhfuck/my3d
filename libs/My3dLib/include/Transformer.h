@@ -14,8 +14,6 @@ class Transformer {
 
  public:
   Transformer();
-  
-  matrix getRTS() const;
 
   [[nodiscard]] matrix getResultingMatrix() const;
   [[nodiscard]] matrix getTranslationMatrix() const;
@@ -29,7 +27,9 @@ class Transformer {
   void SetScale(double x, double y, double z);
   void Scale(double x, double y, double z);
 
- //private:
+  static vector cross_prod(const vector& first, const vector& second);
+
+ private:
   double x_position_ = 0;
   double y_position_ = 0;
   double z_position_ = 0;
@@ -42,7 +42,6 @@ class Transformer {
   double y_angle_ = 0;
   double z_angle_ = 0;
 
-  static vector cross_prod(const vector& first, const vector& second);
   static matrix TranslationMatrix(double x, double y, double z);
   static matrix OxRotationMatrix(double angle);
   static matrix OyRotationMatrix(double angle);

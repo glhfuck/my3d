@@ -3,7 +3,7 @@
 
 #include "../include/Color.h"
 
-struct Point {
+struct Pixel {
   int x = 0;
   int y = 0;
   double depth = -1.0;

@@ -14,18 +14,18 @@ using vector = ublas::vector<double>;
 class Lens {
  public:
   explicit Lens(double fov = 75,
-                  double ratio = 1,
-                  double near = 1,
-                  double far = 100);
+                double ratio = 1,
+                double near = 1,
+                double far = 100);
   void SetFOV(double fov);
 
+  [[nodiscard]] matrix P() const;
+
+ private:
   double fov = 0;
   double ratio = 0;
   double near = 0;
   double far = 0;
-
- public:
-  matrix P() const;
 };
 
 #endif //MY3D_LIBS_MY3DLIB_SRC_LENS_H_

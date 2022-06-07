@@ -26,15 +26,13 @@ class Camera {
   void Rotate(double yaw, double pitch, double roll);
   void Move(double right, double forward, double up);
 
-  void GetParam();
+  matrix V() const;
 
- public:
+ private:
   mutable Transformer transformer_;
   double yaw = 0;
   double pitch = 0;
   double roll = 0;
-
-  matrix V() const;
 };
 
 #endif //MY3D_LIBS_MY3DLIB_SRC_CAMERA_H_

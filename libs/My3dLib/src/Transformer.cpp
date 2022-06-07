@@ -6,12 +6,6 @@ using I = ublas::identity_matrix<double>;
 Transformer::Transformer() {
 }
 
-Transformer::matrix Transformer::getRTS() const {
-  matrix res = ublas::prod(getRotationMatrix(), getTranslationMatrix());
-  res = ublas::prod(res, getScalingMatrix());
-  return res;
-}
-
 Transformer::matrix Transformer::getResultingMatrix() const {
   matrix res = ublas::prod(getTranslationMatrix(), getRotationMatrix());
   res = ublas::prod(res, getScalingMatrix());
