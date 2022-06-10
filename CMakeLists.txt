@@ -17,7 +17,6 @@ if (NOT SDL2_FOUND)
 endif ()
 #-----------------------------------------
 
-
 include_directories(
         include
         ${Boost_INCLUDE_DIR}

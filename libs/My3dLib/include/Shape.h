@@ -19,7 +19,7 @@ class Shape {
       int vt_idx;
       int vn_idx;
     };
-    VertexInfo verInfo[3] = {0};
+    VertexInfo v_info[3] = {0};
   };
 
   [[nodiscard]] matrix M() const;

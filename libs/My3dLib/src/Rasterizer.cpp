@@ -60,9 +60,9 @@ void Rasterizer::DrawShapeEdges(const Shape& shape, const Camera& camera, const 
   ublas::matrix<double> MVP = ublas::prod(lens.P(), MV);
 
   for (auto& facet : shape.facets) {
-    ublas::vector v0 = shape.vertices[facet.verInfo[0].v_idx];
-    ublas::vector v1 = shape.vertices[facet.verInfo[1].v_idx];
-    ublas::vector v2 = shape.vertices[facet.verInfo[2].v_idx];
+    ublas::vector v0 = shape.vertices[facet.v_info[0].v_idx];
+    ublas::vector v1 = shape.vertices[facet.v_info[1].v_idx];
+    ublas::vector v2 = shape.vertices[facet.v_info[2].v_idx];
 
     ublas::vector<double> res0 = ublas::prod(MVP, v0);
     ublas::vector<double> res1 = ublas::prod(MVP, v1);
@@ -115,56 +115,52 @@ void Rasterizer::DrawShapeFacets(const Shape& shape, const Camera& camera, const
   light /= ublas::norm_2(light);
 
   for (auto& facet : shape.facets) {
-    ublas::vector v0 = shape.vertices[facet.verInfo[0].v_idx];
-    ublas::vector v1 = shape.vertices[facet.verInfo[1].v_idx];
-    ublas::vector v2 = shape.vertices[facet.verInfo[2].v_idx];
-
-    ublas::vector<double> res0 = ublas::prod(MVP, v0);
-    ublas::vector<double> res1 = ublas::prod(MVP, v1);
-    ublas::vector<double> res2 = ublas::prod(MVP, v2);
+    ublas::vector<double> v0 = ublas::prod(MVP, shape.vertices[facet.v_info[0].v_idx]);
+    ublas::vector<double> v1 = ublas::prod(MVP, shape.vertices[facet.v_info[1].v_idx]);
+    ublas::vector<double> v2 = ublas::prod(MVP, shape.vertices[facet.v_info[2].v_idx]);
 
     for (int i = 0; i < 3; ++i) {
-      res0[i] /= res0[3];
-      res1[i] /= res1[3];
-      res2[i] /= res2[3];
+      v0[i] /= v0[3];
+      v1[i] /= v1[3];
+      v2[i] /= v2[3];
     }
 
-    if (res0[0] < -1 || res0[0] > 1 ||
-        res0[2] < -1 || res0[2] > 1) {
-      continue;
-    }
-
-    if (res1[0] < -1 || res1[0] > 1 ||
-        res1[2] < -1 || res1[2] > 1) {
-      continue;
-    }
-
-    if (res2[0] < -1 || res2[0] > 1 ||
-        res2[2] < -1 || res2[2] > 1) {
-      continue;
-    }
+//    if (v0[0] < -1 || v0[0] > 1 ||
+//        v0[2] < -1 || v0[2] > 1) {
+//      continue;
+//    }
+//
+//    if (v1[0] < -1 || v1[0] > 1 ||
+//        v1[2] < -1 || v1[2] > 1) {
+//      continue;
+//    }
+//
+//    if (v2[0] < -1 || v2[0] > 1 ||
+//        v2[2] < -1 || v2[2] > 1) {
+//      continue;
+//    }
 
     // Backface culling
-    if ((res1[0] - res0[0]) * (res2[2] - res0[2]) -
-        (res1[2] - res0[2]) * (res2[0] - res0[0]) < 0) {
+    if ((v1[0] - v0[0]) * (v2[2] - v0[2]) -
+        (v1[2] - v0[2]) * (v2[0] - v0[0]) < 0) {
       continue;
     }
 
-    int x0 = (res0[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y0 = (-res0[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
-    double depth0 = res0[1];
-    int x1 = (res1[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y1 = (-res1[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
-    double depth1 = res1[1];
-    int x2 = (res2[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y2 = (-res2[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
-    double depth2 = res2[1];
+    int x0 = (v0[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
+    int y0 = (-v0[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    double depth0 = v0[1];
+    int x1 = (v1[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
+    int y1 = (-v1[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    double depth1 = v1[1];
+    int x2 = (v2[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
+    int y2 = (-v2[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    double depth2 = v2[1];
 
 
     ublas::vector<double> facet_normal =
-        shape.normals[facet.verInfo[0].vn_idx] +
-        shape.normals[facet.verInfo[1].vn_idx] +
-        shape.normals[facet.verInfo[2].vn_idx];
+        shape.normals[facet.v_info[0].vn_idx] +
+        shape.normals[facet.v_info[1].vn_idx] +
+        shape.normals[facet.v_info[2].vn_idx];
 
     ublas::vector<double> res_normal = ublas::prod(M, facet_normal);
     res_normal /= ublas::norm_2(res_normal);
@@ -189,19 +185,22 @@ void Rasterizer::DrawPixel(const Pixel& p) {
     return;
   }
 
+  auto db = depth_buff_.GetBuffer();
+  auto fb = frame_buff_.GetBuffer();
+
   // Depth test
-  if (depth_buff_.GetBuffer()[p.y][p.x] < p.depth) {
+  if (db[p.y][p.x] < p.depth) {
     return;
   }
 
-  depth_buff_.GetBuffer()[p.y][p.x] = p.depth;
+  db[p.y][p.x] = p.depth;
 
   if (filling_mode_ == FillingMode::Colored) {
-    frame_buff_.GetBuffer()[p.y][p.x] = static_cast<uint32_t>(p.color);
+    fb[p.y][p.x] = static_cast<uint32_t>(p.color);
   } else if (filling_mode_ == FillingMode::Depth) {
     uint8_t intensity = 255.0 * (p.depth + 1) / 2;
     Color color(intensity, intensity, intensity);
-    frame_buff_.GetBuffer()[p.y][p.x] = static_cast<uint32_t>(color);
+    fb[p.y][p.x] = static_cast<uint32_t>(color);
   } else {
     throw std::invalid_argument("Invalid filling mode.");
   }
