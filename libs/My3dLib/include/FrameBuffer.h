@@ -13,8 +13,8 @@ class FrameBuffer {
 
   ~FrameBuffer();
 
-  const size_t ROWS_COUNT;
-  const size_t COLUMNS_COUNT;
+  const size_t kROWS;
+  const size_t kCOLUMNS;
 
   const size_t DATA_SIZE;
  private:
@@ -25,8 +25,8 @@ class FrameBuffer {
 
 template <typename T>
 FrameBuffer<T>::FrameBuffer(size_t rows, size_t columns) :
-    ROWS_COUNT(rows),
-    COLUMNS_COUNT(columns),
+    kROWS(rows),
+    kCOLUMNS(columns),
     DATA_SIZE(rows * columns * sizeof(T)) {
   size_t buffer_size = rows * sizeof(T*) + DATA_SIZE;
   buffer_ = (T**) malloc(buffer_size);

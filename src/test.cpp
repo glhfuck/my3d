@@ -43,13 +43,14 @@ int windowCreate() {
 
   Shape::Coords coord = Shape::Coords::Global;
 
+  SDL_SetRelativeMouseMode(SDL_TRUE);
   const Uint8* key_states = SDL_GetKeyboardState(NULL);
+
+  double trans_speed = 0.500;
+  double sens = 0.002;
 
   for (;;) {
     auto start = std::chrono::high_resolution_clock::now();
-
-    double trans_speed = 0.500;
-    double rot_speed = 0.02;
 
     double x_trans = 0;
     double y_trans = 0;
@@ -59,39 +60,29 @@ int windowCreate() {
     double y_rot = 0;
     double z_rot = 0;
 
+    int x = 0;
+    int y = 0;
+
     SDL_PumpEvents();
+    SDL_GetRelativeMouseState(&x, &y);
+    z_rot -= x * sens;
+    x_rot -= y * sens;
 
     {
       if (key_states[SDL_SCANCODE_ESCAPE]) {
         break;
       }
       if (key_states[SDL_SCANCODE_A]) {
-        if (key_states[SDL_SCANCODE_LSHIFT]) {
-          z_rot += rot_speed;
-        } else {
-          x_trans -= trans_speed;
-        }
+        x_trans -= trans_speed;
       }
       if (key_states[SDL_SCANCODE_D]) {
-        if (key_states[SDL_SCANCODE_LSHIFT]) {
-          z_rot -= rot_speed;
-        } else {
-          x_trans += trans_speed;
-        }
+        x_trans += trans_speed;
       }
       if (key_states[SDL_SCANCODE_S]) {
-        if (key_states[SDL_SCANCODE_LSHIFT]) {
-          x_rot -= rot_speed;
-        } else {
-          y_trans -= trans_speed;
-        }
+        y_trans -= trans_speed;
       }
       if (key_states[SDL_SCANCODE_W]) {
-        if (key_states[SDL_SCANCODE_LSHIFT]) {
-          x_rot += rot_speed;
-        } else {
-          y_trans += trans_speed;
-        }
+        y_trans += trans_speed;
       }
       if (key_states[SDL_SCANCODE_LCTRL]) {
         z_trans -= trans_speed;
@@ -134,6 +125,7 @@ int windowCreate() {
     camera.Rotate(z_rot, x_rot, y_rot);
 
     raster.Clear();
+
     raster.DrawShape(ghost, camera, lens);
 
     SDL_UpdateTexture(texture, NULL, raster.GetFrameBuffer(), win_w * sizeof(uint32_t));

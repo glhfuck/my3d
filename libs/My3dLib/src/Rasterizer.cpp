@@ -48,8 +48,8 @@ void Rasterizer::DrawShapeVertices(const Shape& shape, const Camera& camera, con
       continue;
     }
 
-    int x = (res[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y = (-res[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    int x = (res[0] + 1) / 2 * (frame_buff_.kCOLUMNS - 1);
+    int y = (-res[2] + 1) / 2 * (frame_buff_.kROWS - 1);
 
     DrawPixel(Pixel{x, y, res[1], Color::White});
   }
@@ -89,14 +89,14 @@ void Rasterizer::DrawShapeEdges(const Shape& shape, const Camera& camera, const 
       continue;
     }
 
-    int x0 = (res0[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y0 = (-res0[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    int x0 = (res0[0] + 1) / 2 * (frame_buff_.kCOLUMNS - 1);
+    int y0 = (-res0[2] + 1) / 2 * (frame_buff_.kROWS - 1);
     double depth0 = res0[1];
-    int x1 = (res1[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y1 = (-res1[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    int x1 = (res1[0] + 1) / 2 * (frame_buff_.kCOLUMNS - 1);
+    int y1 = (-res1[2] + 1) / 2 * (frame_buff_.kROWS - 1);
     double depth1 = res1[1];
-    int x2 = (res2[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y2 = (-res2[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    int x2 = (res2[0] + 1) / 2 * (frame_buff_.kCOLUMNS - 1);
+    int y2 = (-res2[2] + 1) / 2 * (frame_buff_.kROWS - 1);
     double depth2 = res2[1];
 
     DrawLine(Pixel{x0, y0, depth0}, Pixel{x1, y1, depth1}, Color::White);
@@ -125,20 +125,20 @@ void Rasterizer::DrawShapeFacets(const Shape& shape, const Camera& camera, const
       v2[i] /= v2[3];
     }
 
-//    if (v0[0] < -1 || v0[0] > 1 ||
-//        v0[2] < -1 || v0[2] > 1) {
-//      continue;
-//    }
-//
-//    if (v1[0] < -1 || v1[0] > 1 ||
-//        v1[2] < -1 || v1[2] > 1) {
-//      continue;
-//    }
-//
-//    if (v2[0] < -1 || v2[0] > 1 ||
-//        v2[2] < -1 || v2[2] > 1) {
-//      continue;
-//    }
+    if (v0[0] < -1 || v0[0] > 1 ||
+        v0[2] < -1 || v0[2] > 1) {
+      continue;
+    }
+
+    if (v1[0] < -1 || v1[0] > 1 ||
+        v1[2] < -1 || v1[2] > 1) {
+      continue;
+    }
+
+    if (v2[0] < -1 || v2[0] > 1 ||
+        v2[2] < -1 || v2[2] > 1) {
+      continue;
+    }
 
     // Backface culling
     if ((v1[0] - v0[0]) * (v2[2] - v0[2]) -
@@ -146,14 +146,14 @@ void Rasterizer::DrawShapeFacets(const Shape& shape, const Camera& camera, const
       continue;
     }
 
-    int x0 = (v0[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y0 = (-v0[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    int x0 = (v0[0] + 1) / 2 * (frame_buff_.kCOLUMNS - 1);
+    int y0 = (-v0[2] + 1) / 2 * (frame_buff_.kROWS - 1);
     double depth0 = v0[1];
-    int x1 = (v1[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y1 = (-v1[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    int x1 = (v1[0] + 1) / 2 * (frame_buff_.kCOLUMNS - 1);
+    int y1 = (-v1[2] + 1) / 2 * (frame_buff_.kROWS - 1);
     double depth1 = v1[1];
-    int x2 = (v2[0] + 1) / 2 * (frame_buff_.COLUMNS_COUNT - 1);
-    int y2 = (-v2[2] + 1) / 2 * (frame_buff_.ROWS_COUNT - 1);
+    int x2 = (v2[0] + 1) / 2 * (frame_buff_.kCOLUMNS - 1);
+    int y2 = (-v2[2] + 1) / 2 * (frame_buff_.kROWS - 1);
     double depth2 = v2[1];
 
 
@@ -178,8 +178,8 @@ void Rasterizer::DrawShapeFacets(const Shape& shape, const Camera& camera, const
 void Rasterizer::DrawPixel(const Pixel& p) {
   if (p.x < 0 ||
       p.y < 0 ||
-      p.x > frame_buff_.COLUMNS_COUNT - 1 ||
-      p.y > frame_buff_.ROWS_COUNT - 1 ||
+      p.x > frame_buff_.kCOLUMNS - 1 ||
+      p.y > frame_buff_.kROWS - 1 ||
       p.depth < -1.0 ||
       p.depth > 1.0) {
     return;
@@ -213,7 +213,7 @@ void Rasterizer::DrawLine(const Pixel& p1, const Pixel& p2, const Color& color) 
 void Rasterizer::SetPixelToTriangleOutline(const Pixel& p) {
   auto** to = triangular_outline_.GetBuffer();
 
-  if (p.y < 0 || p.y > frame_buff_.ROWS_COUNT - 1) {
+  if (p.y < 0 || p.y > frame_buff_.kROWS - 1) {
     return;
   }
 
@@ -222,7 +222,7 @@ void Rasterizer::SetPixelToTriangleOutline(const Pixel& p) {
   }
 
   if (p.x > to[1][p.y].x) {
-    to[1][p.y] = Pixel{std::min(p.x, static_cast<int>(frame_buff_.COLUMNS_COUNT) - 1), p.y, p.depth, p.color};
+    to[1][p.y] = Pixel{std::min(p.x, static_cast<int>(frame_buff_.kCOLUMNS) - 1), p.y, p.depth, p.color};
   }
 }
 
@@ -290,7 +290,7 @@ void Rasterizer::DrawTriangle(const Pixel& p1, const Pixel& p2, const Pixel& p3,
   SetEdgeToTriangleOutline(p3, p1, color);
 
   auto** to = triangular_outline_.GetBuffer();
-  for (int y = 0; y < triangular_outline_.COLUMNS_COUNT; ++y) {
+  for (int y = 0; y < triangular_outline_.kCOLUMNS; ++y) {
     if (to[0][y].x <= to[1][y].x) {
       DrawLine(to[0][y], to[1][y], color);
     }
@@ -298,8 +298,8 @@ void Rasterizer::DrawTriangle(const Pixel& p1, const Pixel& p2, const Pixel& p3,
 }
 
 void Rasterizer::ClearDepthBuffer() {
-  for (size_t row = 0; row < depth_buff_.ROWS_COUNT; ++row) {
-    for (size_t column = 0; column < depth_buff_.COLUMNS_COUNT; ++column) {
+  for (size_t row = 0; row < depth_buff_.kROWS; ++row) {
+    for (size_t column = 0; column < depth_buff_.kCOLUMNS; ++column) {
       depth_buff_.GetBuffer()[row][column] = 1.0;
     }
   }
@@ -310,11 +310,11 @@ void Rasterizer::ClearFrameBuffer() {
 }
 
 void Rasterizer::ClearTriangularOutline() {
-  for (int i = 0; i < triangular_outline_.COLUMNS_COUNT; ++i) {
+  for (int i = 0; i < triangular_outline_.kCOLUMNS; ++i) {
     triangular_outline_.GetBuffer()[0][i] = Pixel{INT32_MAX, i};
   }
 
-  for (int i = 0; i < triangular_outline_.COLUMNS_COUNT; ++i) {
+  for (int i = 0; i < triangular_outline_.kCOLUMNS; ++i) {
     triangular_outline_.GetBuffer()[1][i] = Pixel{0, i};
   }
 }
