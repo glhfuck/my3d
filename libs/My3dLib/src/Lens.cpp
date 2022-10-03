@@ -1,5 +1,7 @@
-#include "../include/Lens.h"
+#include "Lens.h"
+
 #include <cmath>
+
 
 Lens::Lens(double fov, double ratio, double near, double far) :
     fov_(fov * M_PI / 180), ratio_(ratio), near_(near), far_(far) {

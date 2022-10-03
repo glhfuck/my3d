@@ -3,6 +3,9 @@ project(my3d)
 
 set(CMAKE_CXX_STANDARD 23)
 
+set(GCC_COVERAGE_COMPILE_FLAGS "-O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+
 #------------------BOOST------------------
 find_package(Boost)
 if (NOT Boost_FOUND)

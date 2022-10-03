@@ -1,4 +1,5 @@
 #include <iostream>
+#include <strstream>
 #include <string>
 #include <chrono>
 
@@ -14,12 +15,15 @@ int windowCreate() {
   const size_t SCREEN_WIDTH = 1280;
   const size_t SCREEN_HEIGHT = 800;
 
+//  const size_t SCREEN_WIDTH = 640;
+//  const size_t SCREEN_HEIGHT = 400;
+
   SDL_Init(SDL_INIT_VIDEO);
 
   SDL_Window *window = SDL_CreateWindow("my3d",
                                         SDL_WINDOWPOS_CENTERED,
                                         SDL_WINDOWPOS_CENTERED,
-                                        SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_BORDERLESS);
+                                        SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 
   SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
 
@@ -40,13 +44,15 @@ int windowCreate() {
   Lens lens(FOV, (double) win_w / win_h, 1, 100);
 
   Shape ghost = OBJ_Parser::getShape("../ghost.obj");
+  //Shape ghost = OBJ_Parser::getShape("../tri.obj");
+  //Shape ghost = OBJ_Parser::getShape("../newell_teaset/teapot.obj");
 
   Shape::Coords coord = Shape::Coords::Global;
 
   SDL_SetRelativeMouseMode(SDL_TRUE);
   const Uint8* key_states = SDL_GetKeyboardState(NULL);
 
-  double trans_speed = 0.500;
+  double trans_speed = 0.100;
   double sens = 0.002;
 
   for (;;) {
@@ -134,13 +140,17 @@ int windowCreate() {
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> duration = end - start;
-    std::cout << duration.count() << std::endl;
+
+    std::strstream str;
+    str << "FPS: " << (int)(1000 / duration.count());
+    SDL_SetWindowTitle(window, str.str());
   }
 
   SDL_DestroyWindow(window);
   SDL_Quit();
   return 0;
 };
+
 
 int main() {
   windowCreate();

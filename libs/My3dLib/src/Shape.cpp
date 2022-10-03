@@ -1,4 +1,5 @@
-#include "../include/Shape.h"
+#include "Shape.h"
+
 
 void Shape::SetPosition(double x, double y, double z, Coords coord) {
   switch (coord) {

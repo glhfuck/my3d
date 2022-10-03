@@ -1,5 +1,7 @@
 #include "Camera.h"
+
 #include "cmath"
+
 
 using namespace boost::numeric;
 
