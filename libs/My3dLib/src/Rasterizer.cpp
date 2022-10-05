@@ -5,7 +5,14 @@
 #include <cmath>
 #include <cstring>
 
+
+#include "SDL2/SDL.h"
+
 bool INSIDE = false;
+extern bool BACKFACECULL;
+
+extern SDL_Renderer *renderer;
+extern SDL_Texture *texture;
 
 const Rasterizer::Line Rasterizer::NDCtop_ = Line(0, 0, 1, 0, 0, -1); // Y смотрит нахуй вперед а не вверх нужно по Z вертеть
 const Rasterizer::Line Rasterizer::NDCleft_ = Line(-1, 0, 0, 1, 0, 0);
@@ -16,9 +23,11 @@ const Rasterizer::Line Rasterizer::NDCnear_ = Line(0, -1, 0, 0, 1, 0);
 Rasterizer::Rasterizer(size_t width, size_t height):
     frame_buff_(height, width),
     depth_buff_(height, width),
-    triangle_sides_(2, height) {
+    triangle_sides_(2, height),
+    et_triangle_sides_(2, height) {
   ClearFrameBuffer();
   ClearDepthBuffer();
+  ClearTriangleSides();
 }
 
 uint32_t* Rasterizer::GetFrameBuffer() {
@@ -125,8 +134,7 @@ void Rasterizer::DrawShapeFacets(const Shape& shape, const Camera& camera, const
   light <<= -1, -1, -1, 0;
   light /= ublas::norm_2(light);
 
-  int Drawn = 0;
-  int Culled = 0;
+  std::deque<Triangle> triangles;
 
   for (auto& facet : shape.facets) {
     Triangle t = {ublas::prod(MVP, shape.vertices[facet.v_info[0].v_idx]),
@@ -144,44 +152,38 @@ void Rasterizer::DrawShapeFacets(const Shape& shape, const Camera& camera, const
     double prod = ublas::inner_prod(light, res_normal);
     Color res_color(100 + 100 * prod, 100 + 100 * prod, 100 + 100 * prod);
 
-    t.c = res_color;
+    t.c0 = res_color;
+    t.c1 = res_color;
+    t.c2 = res_color;
+
+//    vector n0 = ublas::prod(M, shape.normals[facet.v_info[0].vn_idx]);
+//    n0 /= ublas::norm_2(n0);
+//    vector n1 = ublas::prod(M, shape.normals[facet.v_info[1].vn_idx]);
+//    n1 /= ublas::norm_2(n1);
+//    vector n2 = ublas::prod(M, shape.normals[facet.v_info[2].vn_idx]);
+//    n2 /= ublas::norm_2(n2);
+//
+//    double p0 = ublas::inner_prod(light, n0);
+//    double p1 = ublas::inner_prod(light, n1);
+//    double p2 = ublas::inner_prod(light, n2);
+//
+//    t.c0 = Color(128 + 127 * p0, 128 + 127 * p0, 128 + 127 * p0);
+//    t.c1 = Color(128 + 127 * p1, 128 + 127 * p1, 128 + 127 * p1);
+//    t.c2 = Color(128 + 127 * p2, 128 + 127 * p2, 128 + 127 * p2);
+
 
     // Backface culling
-    if ((t.v1[0] * t.v0[3] - t.v0[0] * t.v1[3]) * (t.v2[2] * t.v0[3] - t.v0[2] * t.v2[3]) -
+    if (BACKFACECULL && (t.v1[0] * t.v0[3] - t.v0[0] * t.v1[3]) * (t.v2[2] * t.v0[3] - t.v0[2] * t.v2[3]) -
         (t.v1[2] * t.v0[3] - t.v0[2] * t.v1[3]) * (t.v2[0] * t.v0[3] - t.v0[0] * t.v2[3]) < 0) {
-      ++Culled;
       continue;
     }
 
-    // NDC
-
-
-//    // Far culling
-//    if (t.v0[1] > 1 && t.v1[1] > 1 && t.v2[1] > 1) {
-//      ++Culled;
-//      continue;
-//    }
-//
-//    // Near culling
-//    if (t.v0[1] < -1 && t.v1[1] < -1 && t.v2[1] < -1) {
-//      ++Culled;
-//      continue;
-//    }
-
-
-//    if (true) {
-//      std::cout << t.v0[0] / t.v0[3] << "  " << t.v0[1] / t.v0[3] << "  " << t.v0[2] / t.v0[3] << std::endl;
-//      std::cout << t.v1[0] / t.v1[3] << "  " << t.v1[1] / t.v1[3] << "  " << t.v1[2] / t.v1[3] << std::endl;
-//      std::cout << t.v2[0] / t.v2[3] << "  " << t.v2[1] / t.v2[3] << "  " << t.v2[2] / t.v2[3] << std::endl;
-//      INSIDE = false;
-//    }
-
     Triangle clipped[2];
     int nNewTriangles = 1;
-    std::deque<Triangle> triangles;
+    triangles.clear();
     triangles.emplace_back(t);
 
-    for (int p = 2; p < 8; p++)
+    for (int p = 1; p < 8; p++)
     {
       int nTrisToAdd = 0;
       while (nNewTriangles > 0)
@@ -192,13 +194,6 @@ void Rasterizer::DrawShapeFacets(const Shape& shape, const Camera& camera, const
 
         nTrisToAdd = ClipTriangleWithLine(test, p, clipped[0], clipped[1]);
 
-//        if (true) {
-//          std::cout << test.v0[0] / test.v0[3] << "  " << test.v0[1] / test.v0[3] << "  " << test.v0[2] / test.v0[3] << std::endl;
-//          std::cout << test.v1[0] / test.v1[3] << "  " << test.v1[1] / test.v1[3] << "  " << test.v1[2] / test.v1[3] << std::endl;
-//          std::cout << test.v2[0] / test.v2[3] << "  " << test.v2[1] / test.v2[3] << "  " << test.v2[2] / test.v2[3] << std::endl;
-//          INSIDE = false;
-//        }
-
         for (int w = 0; w < nTrisToAdd; w++) {
           triangles.emplace_back(clipped[w]);
         }
@@ -206,18 +201,11 @@ void Rasterizer::DrawShapeFacets(const Shape& shape, const Camera& camera, const
       nNewTriangles = triangles.size();
     }
 
-    int i = 0;
     for (auto& tri : triangles) {
-      ++i;
 
       tri.v0 /= tri.v0[3];
       tri.v1 /= tri.v1[3];
       tri.v2 /= tri.v2[3];
-
-//      if ((tri.v1[0] - tri.v0[0]) * (tri.v2[2] - tri.v0[2]) -
-//          (tri.v1[2] - tri.v0[2]) * (tri.v2[0] - tri.v0[0]) < 0) {
-//        continue;
-//      }
 
 //      DrawLine(NDC2Screen(tri.v0), NDC2Screen(tri.v1), Color::White);
 //      DrawLine(NDC2Screen(tri.v1), NDC2Screen(tri.v2), Color::White);
@@ -225,12 +213,6 @@ void Rasterizer::DrawShapeFacets(const Shape& shape, const Camera& camera, const
 
       DrawTriangle(tri);
     }
-
-
-
-    //std::cout << i << std::endl;
-
-    ++Drawn;
   }
 
   //std::cout << "Drawn = " << Drawn << "     " << "Culled = " << Culled << std::endl;
@@ -344,18 +326,61 @@ void Rasterizer::DrawLineImpl(const Pixel& p1, const Pixel& p2, const Color& col
 }
 
 void Rasterizer::DrawTriangle(const Triangle& t) {
-  ClearTriangleSides();
+  //ClearTriangleSides();
 
-  SetLineToTriangleSides(NDC2Screen(t.v0), NDC2Screen(t.v1), t.c);
-  SetLineToTriangleSides(NDC2Screen(t.v1), NDC2Screen(t.v2), t.c);
-  SetLineToTriangleSides(NDC2Screen(t.v2), NDC2Screen(t.v0), t.c);
+//  for (int i = 0; i < triangle_sides_.kCOLUMNS; ++i) {
+//    triangle_sides_.GetBuffer()[0][i].x = INT32_MAX;
+//    //triangle_sides_.GetBuffer()[0][i].y = i;
+//    triangle_sides_.GetBuffer()[0][i].depth = -1;
+//
+//    triangle_sides_.GetBuffer()[1][i].x = 0;
+//    //triangle_sides_.GetBuffer()[1][i].y = i;
+//    triangle_sides_.GetBuffer()[1][i].depth = -1;
+//  }
+
+  memcpy(&triangle_sides_.GetBuffer()[0][0], &et_triangle_sides_.GetBuffer()[0][0], et_triangle_sides_.DATA_SIZE);
+
+  SetLineToTriangleSides(NDC2Screen(t.v0), NDC2Screen(t.v1), t.c0);
+  SetLineToTriangleSides(NDC2Screen(t.v1), NDC2Screen(t.v2), t.c0);
+  SetLineToTriangleSides(NDC2Screen(t.v2), NDC2Screen(t.v0), t.c0);
 
   auto** to = triangle_sides_.GetBuffer();
   for (int y = 0; y < triangle_sides_.kCOLUMNS; ++y) {
     if (to[0][y].x <= to[1][y].x) {
-      DrawLine(to[0][y], to[1][y], t.c);
+      DrawLine(to[0][y], to[1][y], t.c0);
     }
   }
+
+
+
+//  Pixel p0 = NDC2Screen(t.v0);
+//  Pixel p1 = NDC2Screen(t.v1);
+//  Pixel p2 = NDC2Screen(t.v2);
+//
+//  SDL_Vertex vert[3];
+//
+//  vert[0].position.x = p0.x;
+//  vert[0].position.y = p0.y;
+//  vert[0].color.r = t.c0.r;
+//  vert[0].color.g = t.c0.g;
+//  vert[0].color.b = t.c0.b;
+//  vert[0].color.a = t.c0.a;
+//
+//  vert[1].position.x = p1.x;
+//  vert[1].position.y = p1.y;
+//  vert[1].color.r = t.c1.r;
+//  vert[1].color.g = t.c1.g;
+//  vert[1].color.b = t.c1.b;
+//  vert[1].color.a = t.c1.a;
+//
+//  vert[2].position.x = p2.x;
+//  vert[2].position.y = p2.y;
+//  vert[2].color.r = t.c2.r;
+//  vert[2].color.g = t.c2.g;
+//  vert[2].color.b = t.c2.b;
+//  vert[2].color.a = t.c2.a;
+//
+//  SDL_RenderGeometry(renderer, NULL, vert, 3, NULL, 0);
 }
 
 void Rasterizer::ClearDepthBuffer() {
@@ -372,11 +397,8 @@ void Rasterizer::ClearFrameBuffer() {
 
 void Rasterizer::ClearTriangleSides() {
   for (int i = 0; i < triangle_sides_.kCOLUMNS; ++i) {
-    triangle_sides_.GetBuffer()[0][i] = Pixel{INT32_MAX, i};
-  }
-
-  for (int i = 0; i < triangle_sides_.kCOLUMNS; ++i) {
-    triangle_sides_.GetBuffer()[1][i] = Pixel{0, i};
+    et_triangle_sides_.GetBuffer()[0][i] = Pixel{INT32_MAX, i};
+    et_triangle_sides_.GetBuffer()[1][i] = Pixel{0, i};
   }
 }
 
@@ -415,13 +437,13 @@ int Rasterizer::ClipTriangleWithLine(Rasterizer::Triangle &t,
       d2 = t.v2[3];
       break;
     }
-    case 2: {
+    case 6: {
       d0 = - t.v0[2] + t.v0[3];
       d1 = - t.v1[2] + t.v1[3];
       d2 = - t.v2[2] + t.v2[3];
       break;
     }
-    case 3: {
+    case 7: {
       d0 = t.v0[2] + t.v0[3];
       d1 = t.v1[2] + t.v1[3];
       d2 = t.v2[2] + t.v2[3];
@@ -439,13 +461,13 @@ int Rasterizer::ClipTriangleWithLine(Rasterizer::Triangle &t,
       d2 = - t.v2[0] + t.v2[3];
       break;
     }
-    case 6: {
+    case 2: {
       d0 = - t.v0[1] + t.v0[3];
       d1 = - t.v1[1] + t.v1[3];
       d2 = - t.v2[1] + t.v2[3];
       break;
     }
-    case 7: {
+    case 3: {
       d0 = t.v0[1] + t.v0[3];
       d1 = t.v1[1] + t.v1[3];
       d2 = t.v2[1] + t.v2[3];
@@ -510,7 +532,9 @@ int Rasterizer::ClipTriangleWithLine(Rasterizer::Triangle &t,
     out_t1.v0 = *inside_vertices[0];
     out_t1.v1 = ClipSegmentWithLine(*inside_vertices[0], *outside_vertices[0], l);
     out_t1.v2 = ClipSegmentWithLine(*inside_vertices[0], *outside_vertices[1], l);
-    out_t1.c = Color::Red;
+    out_t1.c0 = Color::Red;
+    out_t1.c1 = Color::Red;
+    out_t1.c2 = Color::Red;
 //    out_t1.c = t.c;
     return 1;
   }
@@ -519,13 +543,17 @@ int Rasterizer::ClipTriangleWithLine(Rasterizer::Triangle &t,
     out_t1.v0 = *inside_vertices[0];
     out_t1.v1 = *inside_vertices[1];
     out_t1.v2 = ClipSegmentWithLine(*inside_vertices[0], *outside_vertices[0], l);
-    out_t1.c = Color::Blue;
+    out_t1.c0 = Color::Blue;
+    out_t1.c1 = Color::Blue;
+    out_t1.c2 = Color::Blue;
 //    out_t1.c = t.c;
 
     out_t2.v0 = *inside_vertices[1];
     out_t2.v1 = ClipSegmentWithLine(*inside_vertices[1], *outside_vertices[0], l);
     out_t2.v2 = out_t1.v2;
-    out_t2.c = Color::Green;
+    out_t2.c0 = Color::Green;
+    out_t2.c1 = Color::Green;
+    out_t2.c2 = Color::Green;
 //    out_t2.c = t.c;
 
     return 2;
@@ -547,11 +575,11 @@ vector Rasterizer::ClipSegmentWithLine(const vector& start, const vector& end, i
       t = start[3] / (start[3] - end[3]);
       break;
     }
-    case 2: {
+    case 6: {
       t = (start[3] - start[2]) / ((start[3] - start[2]) - (end[3] - end[2]));
       break;
     }
-    case 3: {
+    case 7: {
       t = (start[3] + start[2]) / ((start[3] + start[2]) - (end[3] + end[2]));
       break;
     }
@@ -563,11 +591,11 @@ vector Rasterizer::ClipSegmentWithLine(const vector& start, const vector& end, i
       t = (start[3] - start[0]) / ((start[3] - start[0]) - (end[3] - end[0]));
       break;
     }
-    case 6: {
+    case 2: {
       t = (start[3] - start[1]) / ((start[3] - start[1]) - (end[3] - end[1]));
       break;
     }
-    case 7: {
+    case 3: {
       t = (start[3] + start[1]) / ((start[3] + start[1]) - (end[3] + end[1]));
       break;
     }
@@ -579,89 +607,3 @@ vector Rasterizer::ClipSegmentWithLine(const vector& start, const vector& end, i
 
   return start + (vec * t);
 }
-
-
-
-//int Rasterizer::ClipTriangleWithLine(Rasterizer::Triangle &t,
-//                                     const Line& l,
-//                                     Rasterizer::Triangle &out_t1,
-//                                     Rasterizer::Triangle &out_t2) {
-//  // TODO: Эти значения можно напрямую использовать для опрделения пересечения с плоскостю
-//  // https://fabiensanglard.net/polygon_codec/clippingdocument/Clipping.pdf
-//  double d0 = ublas::inner_prod(l.normal, t.v0 - l.pos);
-//  double d1 = ublas::inner_prod(l.normal, t.v1 - l.pos);
-//  double d2 = ublas::inner_prod(l.normal, t.v2 - l.pos);
-//
-//    int kInside = 0;
-//  int kOutside = 0;
-//
-//  vector* inside_vertices[3] = {nullptr, nullptr, nullptr};
-//  vector* outside_vertices[3] = {nullptr, nullptr, nullptr};
-//
-//  if (d0 >= 0) {
-//    inside_vertices[kInside++] = &t.v0;
-//  } else {
-//    outside_vertices[kOutside++] = &t.v0;
-//  }
-//
-//  if (d1 >= 0) {
-//    inside_vertices[kInside++] = &t.v1;
-//  } else {
-//    outside_vertices[kOutside++] = &t.v1;
-//  }
-//
-//  if (d2 >= 0) {
-//    inside_vertices[kInside++] = &t.v2;
-//  } else {
-//    outside_vertices[kOutside++] = &t.v2;
-//  }
-//
-//  if (&l == &NDCtop_) {
-//    std::cout << "     TOP: ";
-//  } else if (&l == &NDCbottom_) {
-//    std::cout << "     BOT: ";
-//  } else if (&l == &NDCleft_) {
-//    std::cout << "     LEFT: ";
-//  } else if (&l == &NDCright_) {
-//    std::cout << "     RIGHT: ";
-//  }
-//  std::cout << kInside << "  " << kOutside;
-//
-//  if (&l == &NDCbottom_) {
-//    std::cout << std::endl;
-//  }
-//
-//  if (kInside == 0) {
-//    return 0;
-//  }
-//
-//  if (kInside == 3) {
-//    out_t1 = t;
-//    return 1;
-//  }
-//
-//  if (kInside == 1 && kOutside == 2) {
-//    //std::cout << &t.v0 << "    " << &t.v1 << "      " << &t.v2 << std::endl;
-//    out_t1.v0 = *inside_vertices[0];
-//    out_t1.v1 = ClipSegmentWithLine(*inside_vertices[0], *outside_vertices[0], l);
-//    out_t1.v2 = ClipSegmentWithLine(*inside_vertices[0], *outside_vertices[1], l);
-//    out_t1.c = Color::Red;
-//    return 1;
-//  }
-//
-//  if (kInside == 2 && kOutside == 1) {
-//    out_t1.v0 = *inside_vertices[0];
-//    out_t1.v1 = *inside_vertices[1];
-//    out_t1.v2 = ClipSegmentWithLine(*inside_vertices[0], *outside_vertices[0], l);
-//    out_t1.c = Color::Blue;
-//
-//    out_t2.v0 = *inside_vertices[1];
-//    out_t2.v1 = out_t1.v2;
-//    out_t2.v2 = ClipSegmentWithLine(*inside_vertices[1], *outside_vertices[0], l);
-//    out_t2.c = Color::Green;
-//
-//    return 2;
-//  }
-//
-//  throw std::runtime_error("Clipping error");
-//}

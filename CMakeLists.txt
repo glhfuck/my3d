@@ -14,6 +14,8 @@ endif ()
 #-----------------------------------------
 
 #------------------SDL2-------------------
+set(SDL2_DIR "/usr/local/lib/cmake/SDL2")
+
 find_package(SDL2 REQUIRED)
 if (NOT SDL2_FOUND)
     message(FATAL_ERROR "Could not find SDL2!")

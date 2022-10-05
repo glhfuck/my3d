@@ -38,7 +38,9 @@ class Rasterizer {
     vector v1;
     vector v2;
 
-    Color c{Color::White};
+    Color c0{Color::White};
+    Color c1{Color::White};
+    Color c2{Color::White};
   };
   
   struct Line {
@@ -70,9 +72,13 @@ class Rasterizer {
   FrameBuffer<uint32_t> frame_buff_;
   FrameBuffer<double> depth_buff_;
   FrameBuffer<Pixel> triangle_sides_;
+  FrameBuffer<Pixel> et_triangle_sides_;
 
   RenderingMode render_mode_ = Facets;
   FillingMode fill_mode_ = Colored;
+
+  static const Pixel p1;
+  static const Pixel p2;
 
   int ClipTriangleWithLine (Triangle& t, int l, Triangle& out_t1, Triangle& out_t2);
   vector ClipSegmentWithLine(const vector& start, const vector& end, int l);

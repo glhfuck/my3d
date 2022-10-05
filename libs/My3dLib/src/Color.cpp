@@ -7,9 +7,9 @@ Color::Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a): r(r), g(g), b(b), a(a)
 Color::operator uint32_t() const {
   uint32_t res = 0;
 
-  res |= a << 24;
-  res |= r << 16;
-  res |= g << 8;
+  res |= (a << 24);
+  res |= (r << 16);
+  res |= (g << 8);
   res |= b;
 
   return res;
