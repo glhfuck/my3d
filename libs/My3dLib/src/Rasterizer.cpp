@@ -338,7 +338,7 @@ void Rasterizer::DrawTriangle(const Triangle& t) {
 //    triangle_sides_.GetBuffer()[1][i].depth = -1;
 //  }
 
-  memcpy(&triangle_sides_.GetBuffer()[0][0], &et_triangle_sides_.GetBuffer()[0][0], et_triangle_sides_.DATA_SIZE);
+  //memcpy(&triangle_sides_.GetBuffer()[0][0], &et_triangle_sides_.GetBuffer()[0][0], et_triangle_sides_.DATA_SIZE);
 
   SetLineToTriangleSides(NDC2Screen(t.v0), NDC2Screen(t.v1), t.c0);
   SetLineToTriangleSides(NDC2Screen(t.v1), NDC2Screen(t.v2), t.c0);
@@ -348,6 +348,8 @@ void Rasterizer::DrawTriangle(const Triangle& t) {
   for (int y = 0; y < triangle_sides_.kCOLUMNS; ++y) {
     if (to[0][y].x <= to[1][y].x) {
       DrawLine(to[0][y], to[1][y], t.c0);
+      triangle_sides_.GetBuffer()[0][y] = Pixel{INT32_MAX, y};
+      triangle_sides_.GetBuffer()[1][y] = Pixel{0, y};
     }
   }
 
